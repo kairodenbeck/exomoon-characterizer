@@ -1,3 +1,4 @@
+from __future__ import print_function, division
 import numpy as np
 import numpy.random as rnd
 
@@ -25,15 +26,15 @@ def test_h5_file(output_file_name,n_run=None):
         import os
         os.system("h5clear -s "+output_file_name)
         with h5py.File(output_file_name,"r") as hf:
-            print hf.keys()
+            
             test_prob=hf["lnprob"]
             test_chain=hf["chain"]
 
             restart_name=output_file_name
-            print "restarting from", restart_name
-            print "shape:", test_chain.shape
+            print("restarting from", restart_name)
+            print("shape:", test_chain.shape)
             if n_run and len(test_chain[0,0])==n_run:
-                print "Trying to restart from an finished run. Set n_run higher if you wish to continue. Exiting."
+                print("Trying to restart from an finished run. Set n_run higher if you wish to continue. Exiting.")
                 exit()
     except Exception as E:
         import sys
@@ -46,7 +47,7 @@ def test_h5_file(output_file_name,n_run=None):
         restart_name=None
     return restart_name
 
-def test_npz_file(output_file_name):
+def test_npz_file(output_file_name, n_run=None):
     import os.path
     if not os.path.isfile(output_file_name+".npz"):
         return None
@@ -55,10 +56,10 @@ def test_npz_file(output_file_name):
         test_prob=test_data["lnprob"]
         test_chain=test_data["chain"]
         restart_name=output_file_name+".npz"
-        print "restarting from", restart_name
-        print "shape:", test_chain.shape
-        if len(test_chain[0])==n_run:
-            print "Trying to restart from an finished run. Set n_run higher if you wish to continue. Exiting."
+        print("restarting from", restart_name)
+        print("shape:", test_chain.shape)
+        if n_run and len(test_chain[0])==n_run:
+            print("Trying to restart from an finished run. Set n_run higher if you wish to continue. Exiting.")
             exit()
         del test_prob
         del test_chain
@@ -148,7 +149,7 @@ def log_likelihood_with_detrend(params,time,obs,sigma,b_l=None,b_u=None,detrend_
     detrend_params=np.array(params[-n_detr:]).reshape(len(obs),detrend_order+1)
 
     if verbosity>2:
-        print len(b_l),len(b_u)
+        print("Boundary lengths:", len(b_l),len(b_u))
 
     result=0
     if return_model:
@@ -157,7 +158,7 @@ def log_likelihood_with_detrend(params,time,obs,sigma,b_l=None,b_u=None,detrend_
         detrend_model=np.polyval(d,t-t[len(t)/2])+1.
         if np.any(detrend_model<=0.9) or np.any(detrend_model>=1.1):
             if verbosity>1:
-                print "Out of bounds detrending:", d
+                print("Out of bounds detrending:", d)
             if verbosity>3:
                 pl.plot(t,detrend_model)
                 pl.scatter(t,o,s=1,c="k")
@@ -175,7 +176,7 @@ def log_likelihood_with_detrend(params,time,obs,sigma,b_l=None,b_u=None,detrend_
         params_only_transit=params[:-n_detr]
 
         if verbosity>2:
-            print "LD index:", LD_indices[i]
+            print("LD index:", LD_indices[i])
         if LD_indices:
             #params_only_transit[9],params_only_transit[10]=params_only_transit[10],params_only_transit[9]
             if b_l:
@@ -217,13 +218,13 @@ def log_likelihood_with_detrend(params,time,obs,sigma,b_l=None,b_u=None,detrend_
                 oversample_factor=f,exposure_time=exposure_time,use_inclination=use_inclination)
                 model_lc.append(m)
             if verbosity>2:
-                print "loglike:", loglike, "transit:", i
+                print("loglike:", loglike, "transit:", i)
             if minus_inf==loglike:
                 return minus_inf
             result+=loglike
         except ValueError:
             if verbosity>2:
-                print "return minusinf"
+                print("return minusinf")
             return minus_inf
     if return_model:
         return model_lc
@@ -283,10 +284,10 @@ def log_likelihood_buildin_detrend(params,time,obs,sigma,b_l=None,b_u=None,evalu
         evaluation_times=time
     result=0
     if verbosity>2:
-        print "mode:", mode
-        print "params:", params
-        print "bound_l:", b_l
-        print "bound_h:", b_u
+        print("mode:", mode)
+        print("params:", params)
+        print("bound_l:", b_l)
+        print("bound_h:", b_u)
     detrend_params=[]
     model_lc=[]
     if "projected distance"==mode:
@@ -324,20 +325,13 @@ def log_likelihood_buildin_detrend(params,time,obs,sigma,b_l=None,b_u=None,evalu
                     interpolate_occultquad=interpolate_occultquad,verbosity=verbosity,split_period=split_period,fix_blocking=fix_blocking,
                     density_prior=density_prior,stellar_density=stellar_density,
                     oversample_factor=f,exposure_time=exposure_time)
-            '''except ValueError as VE:
-                if verbosity>1:
-                    print "prior value error"
-                    print VE.message
-                    print VE.args
-                return minus_inf'''
+            
             if not np.isfinite(result):
                 if verbosity>1:
-                    print "minus inf prior"
+                    print("minus inf prior")
                 return minus_inf
         if "probability"==mode or "detrend parameters" ==mode or "model light curve"==mode or "both"==mode or "projected distance"==mode:
             #calculate model light curve 
-            #print params_only_transit
-            #print params_only_transit[3]*params_only_transit[4]+np.arange(5)*params_only_transit[4]
             if "one_moon" == moonness:
                 params_only_transit[9],params_only_transit[10]=params_only_transit[10],params_only_transit[9]
                 if split_period:
@@ -353,9 +347,8 @@ def log_likelihood_buildin_detrend(params,time,obs,sigma,b_l=None,b_u=None,evalu
             m=single_model(t,*list(params_only_transit),interpolate_occultquad=None)
 
             if "projected distance"==mode:
-                print "Calculating projected distance"
+                print("Calculating projected distance")
                 z_P_tr,z_M_tr=single_model(t,*list(params_only_transit),interpolate_occultquad=None,return_z=True)
-                #print z_P_tr, z_M_tr
                 z_P.append(z_P_tr)
                 z_M.append(z_M_tr)
 
@@ -387,7 +380,7 @@ def log_likelihood_buildin_detrend(params,time,obs,sigma,b_l=None,b_u=None,evalu
                 result+=log_likelihood_no_signal(t,od-1.0,sod)
                 if not np.isfinite(result):
                     if verbosity>1:
-                        print "minus inf prob"
+                        print("minus inf prob")
                     return minus_inf
     if "projected distance"==mode:
         return z_P, z_M
@@ -397,22 +390,22 @@ def log_likelihood_buildin_detrend(params,time,obs,sigma,b_l=None,b_u=None,evalu
         return model_lc
 
     if verbosity>1:
-        print "prob:", result
+        print("prob:", result)
     return result
 
 def log_likelihood_one_moon(params,time,obs,sigma,b_l,b_u, minus_inf=-np.inf, mode="both",use_kipping_LD_param=True, interpolate_occultquad=None,verbosity=0,plots=False,split_period=False, fix_blocking=False, density_prior=False,stellar_density=None,oversample_factor=1,exposure_time=None,use_inclination=False):
     #verbosity=2
 
     if verbosity>2:
-        print "with inclination?", use_inclination
-        print "parameter size:", len(params)
-        print "mode:", mode
-        print "shapes:"
-        print "  params:", np.array(params).shape
-        print "  time:", np.array(time).shape
-        print "  obs:", np.array(obs).shape
-        print "  b_l:", np.array(b_l).shape
-        print "  b_u:", np.array(b_u).shape
+        print("with inclination?", use_inclination)
+        print("parameter size:", len(params))
+        print("mode:", mode)
+        print("shapes:")
+        print("  params:", np.array(params).shape)
+        print("  time:", np.array(time).shape)
+        print("  obs:", np.array(obs).shape)
+        print("  b_l:", np.array(b_l).shape)
+        print("  b_u:", np.array(b_u).shape)
 
     if oversample_factor==1:
         time=np.copy(time)
@@ -420,7 +413,6 @@ def log_likelihood_one_moon(params,time,obs,sigma,b_l,b_u, minus_inf=-np.inf, mo
     else:
         if exposure_time is None:
             exposure_time=time[1]-time[0]
-        #print oversample_factor,exposure_time
         obs_time=np.copy(time)
         time=(np.array(time)[:,None]+(np.arange(oversample_factor+2)[None,1:-1]*1.0/(oversample_factor+1.0)-0.5)*exposure_time).reshape(-1)
     if mode == "both":
@@ -447,11 +439,11 @@ def log_likelihood_one_moon(params,time,obs,sigma,b_l,b_u, minus_inf=-np.inf, mo
 
     #first calculate the prior
     if verbosity>2:
-        print "Parameters:", params
+        print("Parameters:", params)
     pr=1.0
 
     if verbosity>2:
-        print "prior:", pr
+        print("prior:", pr)
 
     ratio_P  = params[0]
     a_o_R = params[1]
@@ -476,28 +468,28 @@ def log_likelihood_one_moon(params,time,obs,sigma,b_l,b_u, minus_inf=-np.inf, mo
 
     if np.any(np.array(params)<np.array(b_l)) or np.any(np.array(params)>np.array(b_u)):
         if verbosity > 1:
-            print "Exiting because params is not in bounds! params:", params, "\np<b:", np.array(params)<np.array(b_l), "\np>b:", np.array(params)>np.array(b_u)
+            print("Exiting because params is not in bounds! params:", params, "\np<b:", np.array(params)<np.array(b_l), "\np>b:", np.array(params)>np.array(b_u))
         return minus_inf
 
 
     if verbosity>2:
-        print "(2)prior:", pr
+        print("(2)prior:", pr)
     if calc_prior:
         if verbosity>2:
-            print "Prior verbosity:", verbosity
+            print("Prior verbosity:", verbosity)
         if ratio_P<ratio_M:
             if verbosity>1:
-                print "wrong ratio!"
+                print("wrong ratio!")
             return minus_inf
         roche_limit_o_R_star = ratio_M*(2.0/mass_ratio_MP)**(1.0/3.0)
         factor_hill=(per_PM/per_B)**2.0-(a_o_R_PM/a_o_R)**3.0
         if 0.5**3.0/(3.0*(1.0+mass_ratio_MP)) < factor_hill:
             if verbosity>1:
-                print "Hill radius violation!"
+                print("Hill radius violation!")
             return minus_inf
         if a_o_R_PM < roche_limit_o_R_star:
             if verbosity>1:
-                print "Roche radius violation: R_Roche/R_star =", roche_limit_o_R_star, ", a_ps/R_star =", a_o_R_PM
+                print("Roche radius violation: R_Roche/R_star =", roche_limit_o_R_star, ", a_ps/R_star =", a_o_R_PM)
             return minus_inf
 
         if density_prior and ratio_P>0. and ratio_M>0.0:
@@ -505,27 +497,27 @@ def log_likelihood_one_moon(params,time,obs,sigma,b_l,b_u, minus_inf=-np.inf, mo
             density_p = 1.0/9.286e6*fact_A/ratio_P**3. # in rho_Earth 
             density_s = 1.0/9.286e6*fact_A*mass_ratio_MP/ratio_M**3. # in rho_Earth
             if verbosity>2:
-                print "Planet density:", density_p, "Moon density:", density_s 
-                print "parameters:", params
+                print("Planet density:", density_p, "Moon density:", density_s)
+                print("parameters:", params)
             if density_p<0.1 or density_p > 5.0:
                 if verbosity>1:
-                    print "planet density violation: rho[rho_Earth] =", density_p, "a_s/R_star =", a_o_R_PM, "P_s[d] =", per_PM
+                    print("planet density violation: rho[rho_Earth] =", density_p, "a_s/R_star =", a_o_R_PM, "P_s[d] =", per_PM)
                 return minus_inf
             if density_s<0.1 or density_s > 5.0:
                 if verbosity>1:
-                    print "moon density violation: rho[rho_Earth] =", density_s, "a_s/R_star =", a_o_R_PM, "P_s[d] =", per_PM
+                    print("moon density violation: rho[rho_Earth] =", density_s, "a_s/R_star =", a_o_R_PM, "P_s[d] =", per_PM)
                 return minus_inf
         if stellar_density is not None:
             st_dens=a_o_R**3.*9.934e6*(365.25/per_B)**2.
             pr*=np.exp(-0.5*(stellar_density["mean"]/stellar_density["sigma"])**2.)
             if verbosity>2:
-                print "Stellar density [rho_sun]:", st_dens
+                print("Stellar density [rho_sun]:", st_dens)
         if split_period:
             pr*=per_PM
     ln_pr=np.log(pr)
 
     if verbosity>1:
-        print "prior:", ln_pr
+        print("prior:", ln_pr)
     if "prior" == mode:
         return ln_pr
 
@@ -551,7 +543,7 @@ def log_likelihood_one_moon(params,time,obs,sigma,b_l,b_u, minus_inf=-np.inf, mo
 
         if np.any(model_lc>1.0+1.0e-5):
             if verbosity>2:
-                print "model_LC>1 encountered"
+                print("model_LC>1 encountered")
             return minus_inf
 
         if plots or verbosity>2:
@@ -567,7 +559,7 @@ def log_likelihood_one_moon(params,time,obs,sigma,b_l,b_u, minus_inf=-np.inf, mo
         else:
             ln_P=np.sum(-0.5*(np.mean(model_lc.reshape(-1,oversample_factor),axis=1)-obs)**2.0/sigma**2.0)+ln_P_const
     if verbosity>1:
-        print "ln_P:", ln_P, "ln_pr:", ln_pr
+        print("ln_P:", ln_P, "ln_pr:", ln_pr)
     return ln_P+ln_pr
 
 
@@ -579,7 +571,6 @@ def log_likelihood_no_moon(params,time,obs,sigma,b_l,b_u, minus_inf=-np.inf, mod
     else:
         if exposure_time is None:
             exposure_time=time[1]-time[0]
-        #print oversample_factor,exposure_time
         obs_time=np.copy(time)
         time=(np.array(time)[:,None]+(np.arange(oversample_factor+2)[None,1:-1]*1.0/(oversample_factor+1.0)-0.5)*exposure_time).reshape(-1)
     calc_prior=True
@@ -605,20 +596,20 @@ def log_likelihood_no_moon(params,time,obs,sigma,b_l,b_u, minus_inf=-np.inf, mod
 
     #first calculate the prior
     if verbosity>2:
-        print params
+        print(params)
     pr=1.0
     if calc_prior:
         if np.any(np.array(params)<np.array(b_l)) or np.any(np.array(params)>np.array(b_u)):
             if verbosity > 1:
-                print "Exiting because params is not in bounds! params:", params
+                print("Exiting because params is not in bounds! params:", params)
             return minus_inf
         if verbosity>2:
-            print "Prior verbosity:", verbosity
+            print("Prior verbosity:", verbosity)
         if stellar_density is not None:
             st_dens=a_o_R**3.*9.934e6*(365.25/per_B)**2.
             pr*=np.exp(-0.5*(stellar_density["mean"]/stellar_density["sigma"])**2.)
             if verbosity>3:
-                print "Stellar density [rho_sun]:", st_dens
+                print("Stellar density [rho_sun]:", st_dens)
 
     ln_pr=np.log(pr)
 
@@ -646,7 +637,7 @@ def log_likelihood_no_moon(params,time,obs,sigma,b_l,b_u, minus_inf=-np.inf, mod
         else:
             ln_P=np.sum(-0.5*(np.mean(model_lc.reshape(-1,oversample_factor),axis=1)-obs)**2.0/sigma**2.0)+ln_P_const
     if verbosity>1:
-        print "ln_P:", ln_P, "ln_pr:", ln_pr
+        print("ln_P:", ln_P, "ln_pr:", ln_pr)
     return ln_P+ln_pr
 
 
@@ -655,7 +646,7 @@ def log_likelihood_no_signal(time,obs,sigma, minus_inf=-np.inf,verbosity=0):
     ln_P_const=np.sum(-0.5*np.log(2.0*np.pi*sigma**2.0))
     ln_P=np.sum(-0.5*(obs)**2.0/sigma**2.0)+ln_P_const
     if verbosity>1:
-        print "ln_P:", ln_P, "ln_pr:", ln_pr
+        print("ln_P:", ln_P, "ln_pr:", ln_pr)
     return ln_P
 
 
@@ -682,11 +673,11 @@ def run_mcmc_2(time,flux,sigma_flux,model,bounds,first_guess,ndim,nwalkers,n_run
         lnprobkwargs["oversample_factor"]=oversampling_factor
         label_ar = ["ratio_P", "a_B_o_R", "impact_B", "phase_B", "period_B", "LD q1", "LD q2","ratio_M","a_pm_o_R","P_pm","phase_M", "mass ratio"]
 
-    print "Use mpi?", use_mpi
+    print("Use mpi?", use_mpi)
     if use_mpi:
         from emcee.utils import MPIPool
         pool = MPIPool()
-        print "Is master?", pool.is_master()
+        print("Is master?", pool.is_master())
         if not pool.is_master():
             pool.wait()
             sys.exit(0)
@@ -699,14 +690,14 @@ def run_mcmc_2(time,flux,sigma_flux,model,bounds,first_guess,ndim,nwalkers,n_run
             p=pos[i]
             while not np.isfinite(lnprob(p,time,flux,sigma_flux,first_guess[0],first_guess[1],plots=False,**lnprobkwargs)):
                 if verbosity>1:
-                    print i
+                    print(i)
                 p=np.array(first_guess[0]) + rnd.rand(ndim) * (np.array(first_guess[1]) - np.array(first_guess[0]))
             pos[i]=p
-            print "init param", i+1, "/", len(pos),"done!"
+            print("init param", i+1, "/", len(pos),"done!")
 
 
         
-        print "Start burn-in."
+        print("Start burn-in.")
 
         #starting smaller chains that are kitted together later
         walkers_pos=[]
@@ -721,11 +712,11 @@ def run_mcmc_2(time,flux,sigma_flux,model,bounds,first_guess,ndim,nwalkers,n_run
             while not np.isfinite(lnprob(p,time,flux,sigma_flux,first_guess[0],first_guess[1],**lnprobkwargs)):
                 p=np.array(first_guess[0]) + rnd.rand(ndim) * (np.array(first_guess[1]) - np.array(first_guess[0]))
             pos_ex[i]=p
-            print "init param", i+1, "/", len(pos_ex),"done!"
+            print("init param", i+1, "/", len(pos_ex),"done!")
 
         pos_2=pos+pos_ex
 
-        print "Running", int(nwalkers/n_walkers_burnin)+1, "subchains."
+        print("Running", int(nwalkers/n_walkers_burnin)+1, "subchains.")
         i_subch=0
         while n_walkers_tot<nwalkers:
             i_subch+=1
@@ -740,7 +731,7 @@ def run_mcmc_2(time,flux,sigma_flux,model,bounds,first_guess,ndim,nwalkers,n_run
                 walkers_pos.extend(sampler.chain[:,-1,:])
             del sampler
             n_walkers_tot+=n_walkers_burnin
-            print "Burn-in of subchain", i_subch, "done."
+            print("Burn-in of subchain", i_subch, "done.")
     if use_mpi:
         sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=(time,flux,sigma_flux,bounds[0],bounds[1]),kwargs=lnprobkwargs, pool=pool,a=emcee_a)
     else:
@@ -756,14 +747,14 @@ def run_mcmc_2(time,flux,sigma_flux,model,bounds,first_guess,ndim,nwalkers,n_run
         sampler.lnprobability=np.copy(data["lnprob"])
 
     if verbosity>0:
-        print "Burn-in complete. Starting for real."
+        print("Burn-in complete. Starting for real.")
     if save_between_path is None:
         save_between_path="mcmc_run_between_"+model
 
     n_run_part=n_run
     if save_between is not None:
         n_run_part=min(n_run,save_between)
-        print "Choosing sub-chain-length:", n_run_part
+        print("Choosing sub-chain-length:", n_run_part)
         if restart_from is None:
             sampler.run_mcmc(pos_b,n_run_part)
         else:
@@ -772,16 +763,16 @@ def run_mcmc_2(time,flux,sigma_flux,model,bounds,first_guess,ndim,nwalkers,n_run
             np.savez_compressed(save_between_path, chain=sampler.chain, lnprob=sampler.lnprobability,
                         labels=label_ar, mcmc_params={"n_dim":ndim,"n_walkers":nwalkers, "Acc_fr":sampler.acceptance_fraction})
             if verbosity>0:
-                print "Saved progress. Chain length:", len(sampler.chain[0])
+                print("Saved progress. Chain length:", len(sampler.chain[0]))
             sampler.run_mcmc(None,n_run_part)
             if verbosity>0:
                 try:
                     auto_time=sampler.get_autocorr_time(c=0.1)
-                    print "Min/Max AutoCorrTime:",np.min(auto_time), np.max(auto_time)
+                    print("Min/Max AutoCorrTime:",np.min(auto_time), np.max(auto_time))
                 except AutocorrError as AcE:
-                    print AcE.message
+                    print(AcE.message)
                 except Exception as E:
-                    print E.message
+                    print(E.message)
         np.savez_compressed(save_between_path, chain=sampler.chain, lnprob=sampler.lnprobability,
                         labels=label_ar, mcmc_params={"n_dim":ndim,"n_walkers":nwalkers, "Acc_fr":sampler.acceptance_fraction})
     else:
@@ -794,7 +785,7 @@ def run_mcmc_2(time,flux,sigma_flux,model,bounds,first_guess,ndim,nwalkers,n_run
         pool.close()
 
     if verbosity>0:
-        print "Run done."
+        print("Run done.")
     if save:
         np.savez_compressed("mcmc_run_"+model, chain=sampler.chain, lnprob=sampler.lnprobability,
              labels=label_ar, mcmc_params={"n_dim":ndim,"n_walkers":nwalkers, "Acc_fr":sampler.acceptance_fraction})
@@ -842,14 +833,14 @@ def run_ptmcmc(time,flux,sigma_flux,model,bounds,first_guess,ndim,nwalkers,n_run
             p=pos[j][i]
             while (not np.isfinite(lnprior(p))) and (not np.isfinite(lnprobabilty(p))):
                 if verbosity>1:
-                    print i
+                    print(i)
                 p=np.array(first_guess[0]) + rnd.rand(ndim) * (np.array(first_guess[1]) - np.array(first_guess[0]))
             pos[j][i]=p
-        print "init params for temp", j+1, "/", len(pos),"done!"
+        print("init params for temp", j+1, "/", len(pos),"done!")
 
 
     
-    print "Start burn-in."
+    print("Start burn-in.")
 
 
     sampler=emcee.PTSampler(n_temp,nwalkers,ndim,lnprobabilty,lnprior)
@@ -859,36 +850,36 @@ def run_ptmcmc(time,flux,sigma_flux,model,bounds,first_guess,ndim,nwalkers,n_run
     sampler.reset()
 
     if verbosity>0:
-        print "Burn-in complete. Starting for real."
+        print("Burn-in complete. Starting for real.")
     if save_between_path is None:
         save_between_path="ptmcmc_run_between_"+model
 
     n_run_part=n_run
     if save_between is not None:
         n_run_part=min(n_run,save_between)
-        print "Choosing sub-chain-length:", n_run_part
+        print("Choosing sub-chain-length:", n_run_part)
         sampler.run_mcmc(pos_b,n_run_part)
         while len(sampler.chain[0])<n_run:
             np.savez_compressed(save_between_path, chain=sampler.chain, lnprob=sampler.lnprobability,
                         labels=label_ar, mcmc_params={"n_dim":ndim,"n_walkers":nwalkers,"n_temp":n_temp, "Acc_fr":sampler.acceptance_fraction})
             if verbosity>0:
-                print "Saved progress. Chain shape:", sampler.chain.shape
+                print("Saved progress. Chain shape:", sampler.chain.shape)
             sampler.run_mcmc(None,n_run_part)
             if verbosity>0:
                 try:
                     auto_time=sampler.get_autocorr_time(c=0.1)
-                    print "Min/Max AutoCorrTime:",np.min(auto_time), np.max(auto_time)
+                    print("Min/Max AutoCorrTime:",np.min(auto_time), np.max(auto_time))
                 except AutocorrError as AcE:
-                    print AcE.message
+                    print(AcE.message)
                 except Exception as E:
-                    print E.message
+                    print(E.message)
         np.savez_compressed(save_between_path, chain=sampler.chain, lnprob=sampler.lnprobability,
                         labels=label_ar, mcmc_params={"n_dim":ndim,"n_walkers":nwalkers,"n_temp":n_temp, "Acc_fr":sampler.acceptance_fraction})
     else:
         sampler.run_mcmc(pos_b,n_run)
 
     if verbosity>0:
-        print "Run done."
+        print("Run done.")
     if save:
         np.savez_compressed("ptmcmc_run_"+model, chain=sampler.chain, lnprob=sampler.lnprobability,
              labels=label_ar, mcmc_params={"n_dim":ndim,"n_walkers":nwalkers, "Acc_fr":sampler.acceptance_fraction})
@@ -935,18 +926,18 @@ def run_ptmcmc_with_detrending(time,flux,sigma_flux,model,bounds,first_guess, nd
     #randomize start param
     #pos = [np.array(first_guess[0]) + rnd.rand(nwalkers,ndim) * (np.array(first_guess[1]) - np.array(first_guess[0])) for i in range(n_temp)]
 
-    print "Use mpi?", use_mpi
+    print("Use mpi?", use_mpi)
     import sys
     if use_mpi:
         from emcee.utils import MPIPool
         pool = MPIPool(loadbalance=True)
-        print "Is master?", pool.is_master()
+        print("Is master?", pool.is_master())
         if not pool.is_master():
             try:
                 pool.wait()
                 sys.exit(0)
             except Exception as E:
-                print "Exception:", E, "encountered."
+                print("Exception:", E, "encountered.")
                 sys.exit(0)
 
 
@@ -966,25 +957,25 @@ def run_ptmcmc_with_detrending(time,flux,sigma_flux,model,bounds,first_guess, nd
             lnprobability=list(np.swapaxes(old_data["lnprob"],0,2))
 
             pos=np.swapaxes(chain[-1],0,1)
-        print pos.shape
+        print(pos.shape)
         assert(np.array(pos).shape==(n_temp,nwalkers,ndim))
 
     else:
         pos = [np.array(first_guess[0]) + rnd.rand(nwalkers,ndim) * (np.array(first_guess[1]) - np.array(first_guess[0])) for i in range(n_temp)]
 
         for j in range(n_temp):
-            print "start temp:", j
+            print("start temp:", j)
             for i in range(nwalkers):
                 p=pos[j][i]
                 while (not np.isfinite(lnprob(p,*lnpriorargs,**lnpriorkwargs))) or (not np.isfinite(lnprob(p,*lnprobargs,**lnprobkwargs))):
                     if verbosity>1:
-                        print i, p
+                        print(i, p)
                     p=np.array(first_guess[0]) + rnd.rand(ndim) * (np.array(first_guess[1]) - np.array(first_guess[0]))
                 pos[j][i]=p
-                print "walker", i, "found"
+                print("walker", i, "found")
             if False:
                 for p in pos[j]:
-                    print p, LD_indices
+                    print(p, LD_indices)
                     if "one_moon" == model:
                         model_lc=model_one_moon_with_detrend(time,p,detrend_order=detrend_order, LD_indices=LD_indices,fix_blocking=fix_blocking,use_inclination=use_inclination)
                     if "no_moon" == model:
@@ -993,7 +984,7 @@ def run_ptmcmc_with_detrending(time,flux,sigma_flux,model,bounds,first_guess, nd
                         pl.scatter(t,f,color="k",s=2,linewidth=0)
                         pl.plot(t,lc,c="C0",alpha=0.01,lw=2)
                 pl.show()
-            print "init params for temp", j+1, "/", len(pos),"done!"
+            print("init params for temp", j+1, "/", len(pos),"done!")
 
     if ".h5" in save_between_path:
         if not restart_from:
@@ -1002,7 +993,7 @@ def run_ptmcmc_with_detrending(time,flux,sigma_flux,model,bounds,first_guess, nd
         old_exists=False
         if os.path.isfile(save_between_path):
             old_exists=True
-        print "old file", save_between_path, "exists?", old_exists
+        print("old file", save_between_path, "exists?", old_exists)
         #hf_out=h5py.File(save_between_path,"a")
         if old_exists:
             hf_out=h5py.File(save_between_path,"a")
@@ -1010,13 +1001,13 @@ def run_ptmcmc_with_detrending(time,flux,sigma_flux,model,bounds,first_guess, nd
         else:
             hf_out=h5py.File(save_between_path,"w",libver="latest")
             hf_out.swmr_mode = True
-        print "HDF5 file", save_between_path, "opened. SWMR mode?", hf_out.swmr_mode
+        print("HDF5 file", save_between_path, "opened. SWMR mode?", hf_out.swmr_mode)
         if old_exists:
             hf_lnprob=hf_out["lnprob"]
             hf_chain=hf_out["chain"]
             assert(hf_chain.attrs["use inclination"]==use_inclination)
             assert(hf_chain.attrs["detrend order"]==detrend_order)
-            print "opened old file successfully."
+            print("opened old file successfully.")
         else:
             chunk_size_lnprob=1000000/(nwalkers*n_temp)
             hf_lnprob=hf_out.create_dataset("lnprob",(n_temp,nwalkers,0),maxshape=(n_temp,nwalkers,None),dtype=np.float64,chunks=(n_temp,nwalkers,chunk_size_lnprob),compression="gzip")
@@ -1028,7 +1019,7 @@ def run_ptmcmc_with_detrending(time,flux,sigma_flux,model,bounds,first_guess, nd
             hf_chain.attrs.create("labels", label_ar)
         import signal
         def graceful_close_file(sig,frame):
-            print "SIGNAL", sig, "sent. Attempting to close hdf5 file and exit after."
+            print("SIGNAL", sig, "sent. Attempting to close hdf5 file and exit after.")
             hf_out.flush()
             hf_out.close()
             sys.exit(-1)
@@ -1038,7 +1029,7 @@ def run_ptmcmc_with_detrending(time,flux,sigma_flux,model,bounds,first_guess, nd
     betas=[0.1]**np.arange(n_temp)
     #betas[-1]=0.0
     
-    print "Start burn-in."
+    print("Start burn-in.")
 
     if use_mpi:
         sampler = emcee.PTSampler(n_temp,nwalkers,ndim,
@@ -1057,13 +1048,13 @@ def run_ptmcmc_with_detrending(time,flux,sigma_flux,model,bounds,first_guess, nd
     
     sampler.run_mcmc(pos, n_burn)
     pos_b=sampler.chain[:,:,-1,:]
-    print pos_b
-    print sampler.lnprobability
+    print(pos_b)
+    print(sampler.lnprobability)
     sampler.reset()
 
 
     if verbosity>0:
-        print "Burn-in complete. Starting for real."
+        print("Burn-in complete. Starting for real.")
     if save_between_path is None:
         save_between_path="ptmcmc_run_between_"+model
 
@@ -1075,13 +1066,13 @@ def run_ptmcmc_with_detrending(time,flux,sigma_flux,model,bounds,first_guess, nd
         chain.extend(np.swapaxes(new_chain,0,2))
         lnprobability.extend(np.swapaxes(new_lnprob,0,2))
 
-        print "lnprob:",np.array(lnprobability).shape
-        print "chain:", np.array(chain).shape
-        print "pos_b:", np.array(pos_b).shape
-        print "start writing file."
+        print("lnprob:",np.array(lnprobability).shape)
+        print("chain:", np.array(chain).shape)
+        print("pos_b:", np.array(pos_b).shape)
+        print("start writing file."
         np.savez_compressed(save_between_path, chain=np.swapaxes(np.array(chain),0,2), lnprob=np.swapaxes(np.array(lnprobability),0,2),
                     labels=label_ar, mcmc_params={"n_dim":ndim,"n_walkers":nwalkers,"n_temp":n_temp, "detrend order":detrend_order, "inclination":use_inclination})
-        print "ended writing file."
+        print("ended writing file.")
         write_finished=True
         return
 
@@ -1089,15 +1080,15 @@ def run_ptmcmc_with_detrending(time,flux,sigma_flux,model,bounds,first_guess, nd
     ln_prob_len=0
     if save_between is not None:
         n_run_part=min(n_run,save_between)
-        print "Choosing sub-chain-length:", n_run_part
+        print("Choosing sub-chain-length:", n_run_part)
         while ln_prob_len<n_run:
             sampler.run_mcmc(pos_b,n_run_part)
             pos_b=sampler.chain[:,:,-1,:]
             if verbosity>0:
-                print "Saving progress. Chain shape:", sampler.chain.shape
+                print("Saving progress. Chain shape:", sampler.chain.shape)
 
             while not write_finished:
-                print "Waiting for writing to finish. Recheck in 20 seconds"
+                print("Waiting for writing to finish. Recheck in 20 seconds")
                 sleep(20)
 
             if ".h5" in save_between_path:
@@ -1112,17 +1103,17 @@ def run_ptmcmc_with_detrending(time,flux,sigma_flux,model,bounds,first_guess, nd
             if verbosity>0:
                 try:
                     auto_time=sampler.get_autocorr_time(c=0.1)
-                    print "Min/Max AutoCorrTime:",np.min(auto_time), np.max(auto_time)
+                    print("Min/Max AutoCorrTime:",np.min(auto_time), np.max(auto_time))
                 except AutocorrError as AcE:
-                    print AcE.message
+                    print(AcE.message)
                 except Exception as E:
-                    print E.message
+                    print(E.message)
                 try:
                     if n_temp>1:
                         thermodynamic_ev=sampler.thermodynamic_integration_log_evidence(fburnin=0)
-                        print "Thermodynamic integration log evidence:",thermodynamic_ev
+                        print("Thermodynamic integration log evidence:",thermodynamic_ev)
                 except Exception as E:
-                    print E.message
+                    print(E.message)
             sampler.reset()
         #np.savez_compressed(save_between_path, chain=sampler.chain, lnprob=sampler.lnprobability,
         #                labels=label_ar, mcmc_params={"n_dim":ndim,"n_walkers":nwalkers,"n_temp":n_temp, "Acc_fr":sampler.acceptance_fraction})
@@ -1133,7 +1124,7 @@ def run_ptmcmc_with_detrending(time,flux,sigma_flux,model,bounds,first_guess, nd
                  labels=label_ar, mcmc_params={"n_dim":ndim,"n_walkers":nwalkers, "detrend order":detrend_order})
 
     if verbosity>0:
-        print "Run done."
+        print("Run done.")
     return sampler
 
 def run_ptmcmc_buildin_detrending(time,flux,sigma_flux,model,bounds,first_guess,ndim,nwalkers,n_run,n_burn,n_temp,save=False,verbosity=0,LD_indices=None,save_between=None,save_between_path=None,save_skip=100,use_kipping_LD_param=True,split_period=False,use_inclination=False, restart_from=None,interpolate_occultquad=None,beta=1.0/np.sqrt(2.0),allow_oversampling=True,fix_blocking=False, use_own_method=True, density_prior=False, emcee_a=2.,detrend_order=2,use_mpi=False):
@@ -1179,18 +1170,18 @@ def run_ptmcmc_buildin_detrending(time,flux,sigma_flux,model,bounds,first_guess,
     lnpriorargs=(time,flux,sigma_flux,bounds[0],bounds[1])
     detrendparamsargs=(time,flux,sigma_flux,bounds[0],bounds[1])
 
-    print "Use mpi?", use_mpi
+    print("Use mpi?", use_mpi)
     import sys
     if use_mpi:
         from emcee.utils import MPIPool
         pool = MPIPool()#(loadbalance=True)#
-        print "Is master?", pool.is_master()
+        print("Is master?", pool.is_master())
         if not pool.is_master():
             try:
                 pool.wait()
                 sys.exit(0)
             except Exception as E:
-                print "Exception:", E, "encountered."
+                print("Exception:", E, "encountered.")
                 sys.exit(0)
 
 
@@ -1207,25 +1198,25 @@ def run_ptmcmc_buildin_detrending(time,flux,sigma_flux,model,bounds,first_guess,
             lnprobability=list(np.swapaxes(old_data["lnprob"],0,2))
 
             pos=np.swapaxes(chain[-1],0,1)
-        print pos.shape
+        print(pos.shape)
         assert(np.array(pos).shape==(n_temp,nwalkers,ndim))
 
     else:
         pos = [np.array(first_guess[0]) + rnd.rand(nwalkers,ndim) * (np.array(first_guess[1]) - np.array(first_guess[0])) for i in range(n_temp)]
 
         for j in range(n_temp):
-            print "starting with temp", j
+            print("starting with temp", j)
             for i in range(nwalkers):
                 p=pos[j][i]
                 while (not np.isfinite(lnprob(p,*lnpriorargs,**lnpriorkwargs))) or (not np.isfinite(lnprob(p,*lnprobargs,**lnprobkwargs))):
                     if verbosity>1:
-                        print i, p
+                        print(i, p)
                     p=np.array(first_guess[0]) + rnd.rand(ndim) * (np.array(first_guess[1]) - np.array(first_guess[0]))
                 pos[j][i]=p
-                print "walker", i, "found"
+                print("walker", i, "found")
             if False:
                 for p in pos[j]:
-                    print p, LD_indices
+                    print(p, LD_indices)
                     if "one_moon" == model:
                         model_lc=model_one_moon_with_detrend(time,p,detrend_order=detrend_order, LD_indices=LD_indices,fix_blocking=fix_blocking,use_inclination=use_inclination)
                     if "no_moon" == model:
@@ -1234,7 +1225,7 @@ def run_ptmcmc_buildin_detrending(time,flux,sigma_flux,model,bounds,first_guess,
                         pl.scatter(t,f,color="k",s=2,linewidth=0)
                         pl.plot(t,lc,c="C0",alpha=0.01,lw=2)
                 pl.show()
-            print "init params for temp", j+1, "/", len(pos),"done!"
+            print("init params for temp", j+1, "/", len(pos),"done!")
 
     if ".h5" in save_between_path:
         if not restart_from:
@@ -1243,7 +1234,7 @@ def run_ptmcmc_buildin_detrending(time,flux,sigma_flux,model,bounds,first_guess,
         old_exists=False
         if os.path.isfile(save_between_path):
             old_exists=True
-        print "old file", save_between_path, "exists?", old_exists
+        print("old file", save_between_path, "exists?", old_exists)
         #hf_out=h5py.File(save_between_path,"a")
         if old_exists:
             hf_out=h5py.File(save_between_path,"a")
@@ -1251,13 +1242,13 @@ def run_ptmcmc_buildin_detrending(time,flux,sigma_flux,model,bounds,first_guess,
         else:
             hf_out=h5py.File(save_between_path,"w",libver="latest")
             hf_out.swmr_mode = True
-        print "HDF5 file", save_between_path, "opened. SWMR mode?", hf_out.swmr_mode
+        print("HDF5 file", save_between_path, "opened. SWMR mode?", hf_out.swmr_mode)
         if old_exists:
             hf_lnprob=hf_out["lnprob"]
             hf_chain=hf_out["chain"]
             assert(hf_chain.attrs["use inclination"]==use_inclination)
             assert(hf_chain.attrs["detrend order"]==detrend_order)
-            print "opened old file successfully."
+            print("opened old file successfully.")
         else:
             chunk_size_lnprob=1000000/(nwalkers*n_temp)
             hf_lnprob=hf_out.create_dataset("lnprob",(n_temp,nwalkers,0),maxshape=(n_temp,nwalkers,None),dtype=np.float64,chunks=(n_temp,nwalkers,chunk_size_lnprob),compression="gzip")
@@ -1281,7 +1272,7 @@ def run_ptmcmc_buildin_detrending(time,flux,sigma_flux,model,bounds,first_guess,
     betas=beta**np.arange(n_temp)
     #betas[-1]=0.0
     
-    print "Start burn-in."
+    print("Start burn-in.")
 
     if use_mpi:
         sampler = emcee.PTSampler(n_temp,nwalkers,ndim,
@@ -1300,13 +1291,13 @@ def run_ptmcmc_buildin_detrending(time,flux,sigma_flux,model,bounds,first_guess,
     
     sampler.run_mcmc(pos, n_burn)
     pos_b=sampler.chain[:,:,-1,:]
-    print pos_b
-    print sampler.lnprobability
+    print(pos_b)
+    print(sampler.lnprobability)
     sampler.reset()
 
 
     if verbosity>0:
-        print "Burn-in complete. Starting for real."
+        print("Burn-in complete. Starting for real.")
     if save_between_path is None:
         save_between_path="ptmcmc_run_between_"+model
 
@@ -1314,12 +1305,12 @@ def run_ptmcmc_buildin_detrending(time,flux,sigma_flux,model,bounds,first_guess,
     ln_prob_len=0
     if save_between is not None:
         n_run_part=min(n_run,save_between)
-        print "Choosing sub-chain-length:", n_run_part
+        print("Choosing sub-chain-length:", n_run_part)
         while ln_prob_len<n_run:
             sampler.run_mcmc(pos_b,n_run_part)
             pos_b=sampler.chain[:,:,-1,:]
             if verbosity>0:
-                print "Saving progress. Chain shape:", sampler.chain.shape
+                print("Saving progress. Chain shape:", sampler.chain.shape)
 
             if ".h5" in save_between_path:
                 hf_lnprob=hf_out["lnprob"]
@@ -1329,26 +1320,26 @@ def run_ptmcmc_buildin_detrending(time,flux,sigma_flux,model,bounds,first_guess,
                 hf_chain.resize(hf_chain.shape[2]+n_run_part/save_skip,axis=2)
                 hf_chain[:,:,-n_run_part/save_skip:,:]=sampler.chain[:,:,::save_skip,:]
                 hf_out.flush()
-                print "lnprob:",hf_lnprob.shape
-                print "chain:", hf_chain.shape
-                print "pos_b:", np.array(pos_b).shape
+                print("lnprob:",hf_lnprob.shape)
+                print("chain:", hf_chain.shape)
+                print("pos_b:", np.array(pos_b).shape)
             else:
                 write_output(sampler.chain, sampler.lnprobability)
             ln_prob_len+=n_run_part
             if verbosity>0:
                 try:
                     auto_time=sampler.get_autocorr_time(c=0.1)
-                    print "Min/Max AutoCorrTime:",np.min(auto_time), np.max(auto_time)
+                    print("Min/Max AutoCorrTime:",np.min(auto_time), np.max(auto_time))
                 except AutocorrError as AcE:
-                    print AcE.message
+                    print(AcE.message)
                 except Exception as E:
-                    print E.message
+                    print(E.message)
                 try:
                     if n_temp>1:
                         thermodynamic_ev=sampler.thermodynamic_integration_log_evidence(fburnin=0)
-                        print "Thermodynamic integration log evidence:",thermodynamic_ev
+                        print("Thermodynamic integration log evidence:",thermodynamic_ev)
                 except Exception as E:
-                    print E.message
+                    print(E.message)
             sampler.reset()
         #np.savez_compressed(save_between_path, chain=sampler.chain, lnprob=sampler.lnprobability,
         #                labels=label_ar, mcmc_params={"n_dim":ndim,"n_walkers":nwalkers,"n_temp":n_temp, "Acc_fr":sampler.acceptance_fraction})
@@ -1359,7 +1350,7 @@ def run_ptmcmc_buildin_detrending(time,flux,sigma_flux,model,bounds,first_guess,
                  labels=label_ar, mcmc_params={"n_dim":ndim,"n_walkers":nwalkers, "detrend order":detrend_order})
 
     if verbosity>0:
-        print "Run done."
+        print("Run done.")
     return sampler
     
 def calculate_M(sma,per):#sma in au, per in days. output: Mass in earth mass
