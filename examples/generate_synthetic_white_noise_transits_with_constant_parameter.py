@@ -48,7 +48,7 @@ def generate_light_curve(time,flux,star_radius=1.,star_mass=1., period=300,moonn
         moon_mass = np.random.uniform(.5625,22.5625)
         moon_radius = radius_mass_relation(moon_mass)
     else:
-	moon_mass = 1.
+        moon_mass = 1.
 
     q1=np.random.uniform(0.3,0.8)
     q2=np.random.uniform(0.3,0.8)
