@@ -2,6 +2,7 @@ from __future__ import print_function, division
 import numpy as np
 import numpy.random as rnd
 
+import sys
 import os.path
 import h5py
 import emcee
@@ -158,15 +159,7 @@ def log_likelihood_with_detrend(params,time,obs,sigma,b_l=None,b_u=None,detrend_
         if np.any(detrend_model<=0.9) or np.any(detrend_model>=1.1):
             if verbosity>1:
                 print("Out of bounds detrending:", d)
-            if verbosity>3:
-                pl.plot(t,detrend_model)
-                pl.scatter(t,o,s=1,c="k")
-                pl.show()
             return minus_inf
-        if verbosity>3:
-            pl.plot(t,detrend_model)
-            pl.scatter(t,o,s=1,c="k")
-            pl.show()
         detrended_obs=o/detrend_model
         detrended_sig=s/detrend_model
 
@@ -369,11 +362,6 @@ def log_likelihood_buildin_detrend(params,time,obs,sigma,b_l=None,b_u=None,evalu
                     detrend_curve=np.ones(len(et))
                 model_lc.append(em*detrend_curve)
 
-            if False:
-                pl.scatter(et,o)
-                pl.plot(t,m*detr)
-                pl.plot(t,od)
-                pl.show()
 
             if "probability"==mode or "both"==mode:
                 result+=log_likelihood_no_signal(t,od-1.0,sod)
@@ -545,10 +533,6 @@ def log_likelihood_one_moon(params,time,obs,sigma,b_l,b_u, minus_inf=-np.inf, mo
                 print("model_LC>1 encountered")
             return minus_inf
 
-        if plots or verbosity>2:
-            pl.scatter(obs_time,obs,c="k", linewidth=0,s=3)
-            pl.plot(time, model_lc,c="C1",linewidth=2)
-            pl.show()
         
         if mode=="model light curve":
             return np.mean(model_lc.reshape(-1,oversample_factor),axis=1)
@@ -626,10 +610,6 @@ def log_likelihood_no_moon(params,time,obs,sigma,b_l,b_u, minus_inf=-np.inf, mod
             plots=plots,verbosity=verbosity,interpolate_occultquad=interpolate_occultquad,return_z=False)
 
 
-        if plots:
-            pl.scatter(obs_time,obs,c="k", linewidth=0,s=3)
-            pl.plot(time, model_lc,c="C1",linewidth=2)
-            pl.show()
         
         if oversample_factor==1:
             ln_P=np.sum(-0.5*(model_lc-obs)**2.0/sigma**2.0)+ln_P_const
@@ -979,10 +959,6 @@ def run_ptmcmc_with_detrending(time,flux,sigma_flux,model,bounds,first_guess, nd
                         model_lc=model_one_moon_with_detrend(time,p,detrend_order=detrend_order, LD_indices=LD_indices,fix_blocking=fix_blocking,use_inclination=use_inclination)
                     if "no_moon" == model:
                         model_lc=model_no_moon_with_detrend(time,p,detrend_order=detrend_order, LD_indices=LD_indices,fix_blocking=fix_blocking)
-                    for t,lc,f in zip(time,model_lc,flux):
-                        pl.scatter(t,f,color="k",s=2,linewidth=0)
-                        pl.plot(t,lc,c="C0",alpha=0.01,lw=2)
-                pl.show()
             print("init params for temp", j+1, "/", len(pos),"done!")
 
     if ".h5" in save_between_path:
@@ -1220,10 +1196,6 @@ def run_ptmcmc_buildin_detrending(time,flux,sigma_flux,model,bounds,first_guess,
                         model_lc=model_one_moon_with_detrend(time,p,detrend_order=detrend_order, LD_indices=LD_indices,fix_blocking=fix_blocking,use_inclination=use_inclination)
                     if "no_moon" == model:
                         model_lc=model_no_moon_with_detrend(time,p,detrend_order=detrend_order, LD_indices=LD_indices,fix_blocking=fix_blocking)
-                    for t,lc,f in zip(time,model_lc,flux):
-                        pl.scatter(t,f,color="k",s=2,linewidth=0)
-                        pl.plot(t,lc,c="C0",alpha=0.01,lw=2)
-                pl.show()
             print("init params for temp", j+1, "/", len(pos),"done!")
 
     if ".h5" in save_between_path:
