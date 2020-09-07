@@ -1,13 +1,13 @@
 from __future__ import print_function, division
 import numpy as np
 
-import occultquad as oq
+from .occultquad import occultquad
 
 def my_occultquad(z,u1,u2,p0):
     """
     A wrapper for the original occultquad to fit my code better. 
     """
-    return oq.occultquad(z,p0,[u1,u2])
+    return occultquad(z,p0,[u1,u2])
 
 #constants
 R_sun_in_au = 0.00465
