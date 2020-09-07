@@ -1,0 +1,4 @@
+h5py
+numpy>0.14
+emcee>2.1
+scipy
