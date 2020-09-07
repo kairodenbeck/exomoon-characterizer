@@ -1,4 +1,4 @@
-from __future__ import print_function, division
+
 import os
 
 os.environ["HOME"]=os.path.expanduser("~")
@@ -30,7 +30,7 @@ def get_available_kics(quarter):
         else:
             d["mass"]=None
 
-    print("Nr of targets:", len(data))
+    print "Nr of targets:", len(data)
     return data
 
 def get_lightcurve_from_kic(kic_nr,quarter):
@@ -50,7 +50,7 @@ def get_lightcurve_from_kic(kic_nr,quarter):
         
         lc=lcf.PDCSAP_FLUX.normalize()
     except Exception as E:
-        print("Trying to correct Error:", E)
+        print "Trying to correct Error:", E
         cache_name=[download_dir+"/mastDownload/Kepler/"+o_id+"/"+pFn for o_id, pFn in zip(search_res.table["obs_id"],search_res.table["productFilename"])]
         os.system("rm -f %s"%(cache_name[selector]))
         lcf=search_res[selector].download(download_dir=download_dir)
@@ -145,18 +145,18 @@ def generate_light_curve(time,flux,star_radius=1.,star_mass=1.,moonness=True,ver
     
     if verbosity>1:
         
-        print("R_p:", planet_radius)
-        print("ratio_p", ratio_P)
-        print("M_p:", planet_mass)
-        print("a_o_R:", bary_sma)
-        print("P_b:", bary_period)
-        print("t_0:", bary_t0)
+        print "R_p:", planet_radius
+        print "ratio_p", ratio_P
+        print "M_p:", planet_mass
+        print "a_o_R:", bary_sma
+        print "P_b:", bary_period
+        print "t_0:", bary_t0
 
-        print("R_s:", moon_radius)
-        print("ratio_s", ratio_S)
-        print("M_s:", moon_mass)
-        print("a_o_R_s:", moon_sma)
-        print("P_s:", moon_period)
+        print "R_s:", moon_radius
+        print "ratio_s", ratio_S
+        print "M_s:", moon_mass
+        print "a_o_R_s:", moon_sma
+        print "P_s:", moon_period
 
     model = model_one_moon(time,ratio_P,bary_a_o_R,bary_impact,bary_phase, bary_period,0.4,0.4,
               ratio_S,a_o_R_S,moon_phase,moon_period,moon_mass/(planet_mass),i_S,Omega_S)
@@ -176,7 +176,7 @@ elif "false" == sys.argv[1].lower():
 else:
     raise NotImplementedError
 
-print("Moonness:", moonness)
+print "Moonness:", moonness
     
 used_quarter=int(sys.argv[2])
 
@@ -206,7 +206,7 @@ while i_succ < N_lc and i<len(kics):
         kic_nr=kics[i]["star_id"]
         radius=kics[i]["radius"]
         mass=kics[i]["mass"]
-        print("KIC %09i"%kic_nr)
+        print "KIC %09i"%kic_nr
         lc=get_lightcurve_from_kic(kic_nr,used_quarter)
         
         flux_sim,po=generate_light_curve(lc.time,lc.flux,star_radius=radius,star_mass=mass,moonness=moonness,return_param_dict=True)
@@ -216,12 +216,12 @@ while i_succ < N_lc and i<len(kics):
         cg.create_dataset("time",data=lc.time,compression='gzip', compression_opts=4,dtype=np.float64)
         cg.create_dataset("flux",data=lc.flux,compression='gzip', compression_opts=4,dtype=np.float64)
         cg.attrs.create("KIC",kic_nr)
-        for key, val in list(po.items()):
+        for key, val in po.items():
             cg.attrs.create(key,val)
         i_succ+=1
     except Exception as E:
-        print("No LC saved:", E)
+        print "No LC saved:", E
     i+=1
 if i_succ<N_lc-1:
-    print("Less samples than expected were created")
+    print "Less samples than expected were created"
 outf.close()

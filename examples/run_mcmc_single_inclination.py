@@ -1,5 +1,5 @@
 #!/usr/bin/python
-
+from __future__ import print_function, division
 import sys
 import os, os.path, errno
 import numpy as np
@@ -15,7 +15,7 @@ run_one_moon_model=True
 
 use_MPI=False
 
-print "Use MPI?", use_MPI
+print("Use MPI?", use_MPI)
 
 rho_star = 1.#in solar density
 
@@ -61,12 +61,6 @@ for i in range(N_transits):
     flux.append(lc)
     fmod.append(model)
     sigma_flux.append(np.ones(len(lc))*noise_levels[i])
-
-
-
-print len(time)
-print len(flux)
-print len(sigma_flux)
 
 
 for t,f,fm,fe in zip(time,flux,fmod,sigma_flux):

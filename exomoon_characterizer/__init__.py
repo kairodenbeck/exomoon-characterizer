@@ -8,7 +8,6 @@ import emcee
 from emcee.autocorr import integrated_time
 from emcee.autocorr import AutocorrError
 
-from fitting import occultquad_interp
 
 from fitting import model_one_moon
 from fitting import model_no_moon
@@ -1069,7 +1068,7 @@ def run_ptmcmc_with_detrending(time,flux,sigma_flux,model,bounds,first_guess, nd
         print("lnprob:",np.array(lnprobability).shape)
         print("chain:", np.array(chain).shape)
         print("pos_b:", np.array(pos_b).shape)
-        print("start writing file."
+        print("start writing file.")
         np.savez_compressed(save_between_path, chain=np.swapaxes(np.array(chain),0,2), lnprob=np.swapaxes(np.array(lnprobability),0,2),
                     labels=label_ar, mcmc_params={"n_dim":ndim,"n_walkers":nwalkers,"n_temp":n_temp, "detrend order":detrend_order, "inclination":use_inclination})
         print("ended writing file.")

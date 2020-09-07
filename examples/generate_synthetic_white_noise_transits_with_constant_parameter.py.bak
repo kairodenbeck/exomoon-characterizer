@@ -1,4 +1,4 @@
-from __future__ import print_function, division
+
 import os
 
 os.environ["HOME"]=os.path.expanduser("~")
@@ -122,18 +122,18 @@ def generate_light_curve(time,flux,star_radius=1.,star_mass=1., period=300,moonn
     
     if verbosity>1:
         
-        print("R_p:", planet_radius)
-        print("ratio_p", ratio_P)
-        print("M_p:", planet_mass)
-        print("a_o_R:", bary_sma)
-        print("P_b:", bary_period)
-        print("t_0:", bary_t0)
+        print "R_p:", planet_radius
+        print "ratio_p", ratio_P
+        print "M_p:", planet_mass
+        print "a_o_R:", bary_sma
+        print "P_b:", bary_period
+        print "t_0:", bary_t0
 
-        print("R_s:", moon_radius)
-        print("ratio_s", ratio_S)
-        print("M_s:", moon_mass)
-        print("a_o_R_s:", moon_sma)
-        print("P_s:", moon_period)
+        print "R_s:", moon_radius
+        print "ratio_s", ratio_S
+        print "M_s:", moon_mass
+        print "a_o_R_s:", moon_sma
+        print "P_s:", moon_period
 
     if moonness:
         model = model_one_moon(time,ratio_P,bary_a_o_R,bary_impact,bary_phase, bary_period,c1,c2,
@@ -156,7 +156,7 @@ elif "false" == sys.argv[1].lower():
 else:
     raise NotImplementedError
 
-print("Moonness:", moonness)
+print "Moonness:", moonness
 
 fix_noise=False
 fix_radius=False
@@ -165,13 +165,13 @@ if "fix_noise"==sys.argv[3].lower():
 elif "fix_radius"==sys.argv[3].lower():
     fix_radius=True
 else:
-    print(sys.argv[3])
+    print sys.argv[3]
     raise NotImplementedError
 
 
-print(sys.argv[3])
-print("fix_noise?", fix_noise)
-print("fix_radius?", fix_radius)
+print sys.argv[3]
+print "fix_noise?", fix_noise
+print "fix_radius?", fix_radius
 
 
 N_lc=int(sys.argv[2])
@@ -236,15 +236,15 @@ while i_succ < N_lc:
         cg.create_dataset("flux",data=flux_sim,compression='gzip', compression_opts=4,dtype=np.float64)
         #cg.attrs.create("KIC",kic_nr)
         
-	for key, val in list(po.items()):
+	for key, val in po.items():
             cg.attrs.create(key,val)
         i_succ+=1
 	if i_succ%100==0:
 	    time_difference=clock()-start_time
-	    print(i_succ, "/", N_lc, "generated. Time remaining (min):", time_difference*1./i_succ*(N_lc-i_succ)/60.)
+	    print i_succ, "/", N_lc, "generated. Time remaining (min):", time_difference*1./i_succ*(N_lc-i_succ)/60.
     except Exception as E:
-        print("No LC saved:", E)
+        print "No LC saved:", E
     i+=1
 if i_succ<N_lc-1:
-    print("Less samples than expected were created")
+    print "Less samples than expected were created"
 outf.close()
