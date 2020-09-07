@@ -1,4 +1,6 @@
-h5py
 numpy>0.14
-emcee>2.1
 scipy
+h5py
+six
+schwimmbad
+emcee>2.1
