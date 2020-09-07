@@ -197,7 +197,7 @@ def get_coords(time, ratio_P, a_o_R, impact_B, phase_B, period_B, c1, c2, ratio_
 
     pot_tr_mask = z_B_x**2.+z_B_y**2. < (1.0+semi_major_axis_PM_o_R+ratio_P)**2.
 
-    E=2.0*np.pi*(time_p/period_PM+phase_M) #need to solve for E from M iff ecc!=0
+    E=2.0*np.pi*(time/period_PM+phase_M) #need to solve for E from M iff ecc!=0
 
     ecc=0.0
 

@@ -84,18 +84,6 @@ first_guess_no_moon_low = [ratio_P*0.95, a_o_R*0.95, 0.0, phase_B-0.01, period*0
 first_guess_no_moon_high= [ratio_P*1.05, a_o_R*1.05, 0.1, phase_B+0.01, period*1.01, q1s[0]+0.1, q2s[0]+0.1,q1s[-1]+0.1, q2s[-1]+0.1]
 first_guess_no_moon =(first_guess_no_moon_low,first_guess_no_moon_high)
 
-
-if False:
-    for t,f,sf in zip(time,flux,sigma_flux):
-        pl.errorbar(t,f,yerr=sf)
-        model = model_no_moon_nested_2(t,*first_guess_no_moon_low)
-        pl.plot(t,model,c="k",zorder=10)
-        model = model_no_moon_nested_2(t,*first_guess_no_moon_high)
-        pl.plot(t,model,c="k",ls=":",zorder=10)
-    pl.show()
-
-    exit()
-
 '''
 No moon parameters:
 00 ratio_P [0,1]
