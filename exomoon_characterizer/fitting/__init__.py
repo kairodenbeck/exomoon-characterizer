@@ -1,3 +1,4 @@
+from __future__ import print_function, division
 import numpy as np
 
 import occultquad as oq
@@ -8,13 +9,14 @@ def my_occultquad(z,u1,u2,p0):
     """
     return oq.occultquad(z,p0,[u1,u2])
 
+#constants
 R_sun_in_au = 0.00465
 R_earth_in_R_sun = 0.009157694
 
 def model_no_moon(time,ratio_P,a_o_R,impact_B,phase_B,period_B, c1,c2,verbosity=0,interpolate_occultquad=None,return_z=False, plots=False):
     const=a_o_R
     if verbosity>1:
-        print const
+        print(const)
     ratio_P=np.abs(ratio_P)
     z_B_x=const*np.sin(2.0*np.pi*(time/period_B-phase_B))
     z_B_y=np.abs(impact_B)*np.cos(2.0*np.pi*(time/period_B-phase_B))
@@ -36,10 +38,6 @@ def model_no_moon(time,ratio_P,a_o_R,impact_B,phase_B,period_B, c1,c2,verbosity=
     else:
         transit_signal_P[z_B<1.0+ratio_P] = occultquad_interp(z_B[z_B<1.0+ratio_P], ratio_P, u1, u2,interpolate_occultquad)
 
-    #transit_signal_P=np.array(transit_signal_P)
-
-    #if verbosity>0:
-    #    print transit_signal_P.shape
     return transit_signal_P
 
 
@@ -47,7 +45,7 @@ def model_one_moon(time, ratio_P,a_o_R,impact_B,phase_B,period_B, c1,c2, ratio_M
 
     const=a_o_R
     if verbosity>1:
-        print const
+        print(const)
     z_B_x=const*np.sin(2.0*np.pi*(time/period_B-phase_B))
     z_B_y=impact_B*np.cos(2.0*np.pi*(time/period_B-phase_B))
     z_B_y[np.cos(2.0*np.pi*(time)/period_B-phase_B)<0.0]+=10.0*a_o_R#exclude if behind star
@@ -93,7 +91,7 @@ def model_one_moon(time, ratio_P,a_o_R,impact_B,phase_B,period_B, c1,c2, ratio_M
     const_M=-1.0/(1.0+mass_ratio_MP)*semi_major_axis_PM_o_R
 
     if verbosity>1:
-        print const_M
+        print(const_M)
     
     z_M_x=const_M*x
     z_M_y=const_M*y
@@ -151,7 +149,7 @@ def model_one_moon(time, ratio_P,a_o_R,impact_B,phase_B,period_B, c1,c2, ratio_M
 
         if np.any(overlap):
             if verbosity>1:
-                print "Fixing", np.sum(overlap), "overlaps."
+                print("Fixing", np.sum(overlap), "overlaps.")
             fl_cor=[]
             n_o=1
             for zPx,zPy,zMx,zMy in zip(z_B_P_x[overlap],z_B_P_y[overlap],z_B_M_x[overlap],z_B_M_y[overlap]):
@@ -164,9 +162,9 @@ def model_one_moon(time, ratio_P,a_o_R,impact_B,phase_B,period_B, c1,c2, ratio_M
                 N_pix_y=int(blocking_res*(bound_high_y-bound_low_y))+10#1225.
 
                 if verbosity>2:
-                    print "Fixing overlap", n_o
-                    print "Size of patch:", bound_high_x-bound_low_x, "x", bound_high_y-bound_low_y
-                    print "Pixels:", N_pix_x, "x", N_pix_y
+                    print("Fixing overlap", n_o)
+                    print("Size of patch:", bound_high_x-bound_low_x, "x", bound_high_y-bound_low_y)
+                    print("Pixels:", N_pix_x, "x", N_pix_y)
 
                 x_pos=np.linspace(bound_low_x,bound_high_x,N_pix_x)
                 y_pos=np.linspace(bound_low_y,bound_high_y,N_pix_y)
@@ -187,7 +185,7 @@ def model_one_moon(time, ratio_P,a_o_R,impact_B,phase_B,period_B, c1,c2, ratio_M
 
 
     if verbosity>1:
-        print transit_signal_P.shape
+        print(transit_signal_P.shape)
 
     total_transit_all[pot_tr_mask]=total_transit
 
@@ -199,7 +197,7 @@ def model_one_moon(time, ratio_P,a_o_R,impact_B,phase_B,period_B, c1,c2, ratio_M
 def get_coords(time, ratio_P, a_o_R, impact_B, phase_B, period_B, c1, c2, ratio_M, semi_major_axis_PM_o_R, phase_M, period_PM, mass_ratio_MP, i_s=0, Omega_s=0, verbosity=0):
     const=a_o_R
     if verbosity>1:
-        print const
+        print(const)
     z_B_x=const*np.sin(2.0*np.pi*(time/period_B-phase_B))
     z_B_y=impact_B*np.cos(2.0*np.pi*(time/period_B-phase_B))
     z_B_z=-const*np.cos(2.0*np.pi*(time/period_B-phase_B))
@@ -237,7 +235,7 @@ def get_coords(time, ratio_P, a_o_R, impact_B, phase_B, period_B, c1, c2, ratio_
     const_M=-1.0/(1.0+mass_ratio_MP)*semi_major_axis_PM_o_R
 
     if verbosity>1:
-        print const_M
+        print(const_M)
     
     z_M_x= const_M*x
     z_M_y= const_M*y
