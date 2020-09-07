@@ -13,7 +13,7 @@ def my_occultquad(z,u1,u2,p0):
 R_sun_in_au = 0.00465
 R_earth_in_R_sun = 0.009157694
 
-def model_no_moon(time,ratio_P,a_o_R,impact_B,phase_B,period_B, c1,c2,verbosity=0,interpolate_occultquad=None,return_z=False, plots=False):
+def model_no_moon(time,ratio_P,a_o_R,impact_B,phase_B,period_B, c1,c2,verbosity=0,return_z=False, plots=False):
     const=a_o_R
     if verbosity>1:
         print(const)
@@ -33,15 +33,12 @@ def model_no_moon(time,ratio_P,a_o_R,impact_B,phase_B,period_B, c1,c2,verbosity=
 
     transit_signal_P=np.ones(len(z_B))
 
-    if interpolate_occultquad is None:
-        transit_signal_P[z_B<1.0+ratio_P] = my_occultquad(z_B[z_B<1.0+ratio_P], u1, u2, ratio_P)
-    else:
-        transit_signal_P[z_B<1.0+ratio_P] = occultquad_interp(z_B[z_B<1.0+ratio_P], ratio_P, u1, u2,interpolate_occultquad)
+    transit_signal_P[z_B<1.0+ratio_P] = my_occultquad(z_B[z_B<1.0+ratio_P], u1, u2, ratio_P)
 
     return transit_signal_P
 
 
-def model_one_moon(time, ratio_P,a_o_R,impact_B,phase_B,period_B, c1,c2, ratio_M, semi_major_axis_PM_o_R, phase_M, period_PM, mass_ratio_MP, i_s=0,Omega_s=0, full_out=False,plots=False,verbosity=0,interpolate_occultquad=None, return_z=False,fix_blocking=False,blocking_res=300.):
+def model_one_moon(time, ratio_P,a_o_R,impact_B,phase_B,period_B, c1,c2, ratio_M, semi_major_axis_PM_o_R, phase_M, period_PM, mass_ratio_MP, i_s=0,Omega_s=0, full_out=False,plots=False,verbosity=0, return_z=False,fix_blocking=False,blocking_res=300.):
 
     const=a_o_R
     if verbosity>1:
@@ -126,15 +123,11 @@ def model_one_moon(time, ratio_P,a_o_R,impact_B,phase_B,period_B, c1,c2, ratio_M
     u1 = c1#0.4089
     u2 = c2#0.2556
 
-    if interpolate_occultquad is None:
-        transit_signal_P = my_occultquad(z_B_P, u1, u2, ratio_P)
-        transit_signal_M = my_occultquad(z_B_M, u1, u2, ratio_M)
+    transit_signal_P = my_occultquad(z_B_P, u1, u2, ratio_P)
+    transit_signal_M = my_occultquad(z_B_M, u1, u2, ratio_M)
 
-        transit_signal_P=np.array(transit_signal_P)
-        transit_signal_M=np.array(transit_signal_M)
-    else:
-        transit_signal_P = occultquad_interp(z_B_P, ratio_P, u1, u2, interpolate_occultquad)
-        transit_signal_M = occultquad_interp(z_B_M, ratio_M, u1, u2, interpolate_occultquad)
+    transit_signal_P=np.array(transit_signal_P)
+    transit_signal_M=np.array(transit_signal_M)
 
     total_transit=1.0-(1.0-transit_signal_P)-(1.0-transit_signal_M)
     if fix_blocking:
