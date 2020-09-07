@@ -4,6 +4,7 @@ import numpy.random as rnd
 
 import sys
 import os.path
+from time import sleep
 import h5py
 import emcee
 from emcee.autocorr import integrated_time
@@ -625,7 +626,7 @@ def log_likelihood_no_signal(time,obs,sigma, minus_inf=-np.inf,verbosity=0):
     ln_P_const=np.sum(-0.5*np.log(2.0*np.pi*sigma**2.0))
     ln_P=np.sum(-0.5*(obs)**2.0/sigma**2.0)+ln_P_const
     if verbosity>1:
-        print("ln_P:", ln_P, "ln_pr:", ln_pr)
+        print("ln_P:", ln_P, "ln_pr:", ln_P)
     return ln_P
 
 
@@ -767,100 +768,6 @@ def run_mcmc_2(time,flux,sigma_flux,model,bounds,first_guess,ndim,nwalkers,n_run
         print("Run done.")
     if save:
         np.savez_compressed("mcmc_run_"+model, chain=sampler.chain, lnprob=sampler.lnprobability,
-             labels=label_ar, mcmc_params={"n_dim":ndim,"n_walkers":nwalkers, "Acc_fr":sampler.acceptance_fraction})
-    return sampler
-
-    
-def run_ptmcmc(time,flux,sigma_flux,model,bounds,first_guess,ndim,nwalkers,n_run,n_burn,n_temp,save=False,verbosity=0,save_between=None,save_between_path=None,use_kipping_LD_param=True,interpolate_occultquad=None,allow_oversampling=True,fix_blocking=False,use_own_method=True, density_prior=False, emcee_a=2.):
-
-    oversampling_factor=1
-    exposure_time=time[1]-time[0]
-    if allow_oversampling:
-        oversampling_factor=int(exposure_time/(5./60./24.))+1
-
-
-    system=star_system(time,flux,sigma_flux,oversample_factor=oversampling_factor,exposure_time=exposure_time)
-
-    system.use_own_method=use_own_method
-    #select model
-    lnprobkwargs={"use_kipping_LD_param":use_kipping_LD_param, "interpolate_occultquad":interpolate_occultquad, "verbosity":verbosity, "fix_blocking":fix_blocking}
-    if model=="one_moon" and density_prior:
-        lnprobkwargs["density_prior"]=density_prior
-    if model=="no_moon":
-        label_ar = ["ratio_P", "a_o_R", "impact", "phase", "period", "LD q1", "LD q2"]
-        lnprob=system.log_likelihood_no_moon
-    if model=="one_moon":
-        lnprob=system.log_likelihood_one_moon
-        label_ar = ["ratio_P", "a_B_o_R", "impact_B", "phase_B", "period_B", "LD q1", "LD q2","ratio_M","a_pm_o_R","P_pm","phase_M", "mass ratio"]
-
-    lnpriorkwargs=dict(lnprobkwargs)
-    lnpriorkwargs["mode"]="prior"
-    lnprobkwargs["mode"]="probability"
-
-    lnprobargs=(bounds[0],bounds[1])
-    lnpriorargs=(bounds[0],bounds[1])
-
-    def lnprobability(param):
-        return lnprob(param,*lnprobargs,**lnprobkwargs)
-    def lnprior(param):
-        return lnprob(param,*lnpriorargs,**lnpriorkwargs)
-    #randomize start param
-    pos = [np.array(first_guess[0]) + rnd.rand(nwalkers,ndim) * (np.array(first_guess[1]) - np.array(first_guess[0])) for i in range(n_temp)]
-
-    for j in range(n_temp):
-        for i in range(nwalkers):
-            p=pos[j][i]
-            while (not np.isfinite(lnprior(p))) and (not np.isfinite(lnprobabilty(p))):
-                if verbosity>1:
-                    print(i)
-                p=np.array(first_guess[0]) + rnd.rand(ndim) * (np.array(first_guess[1]) - np.array(first_guess[0]))
-            pos[j][i]=p
-        print("init params for temp", j+1, "/", len(pos),"done!")
-
-
-    
-    print("Start burn-in.")
-
-
-    sampler=emcee.PTSampler(n_temp,nwalkers,ndim,lnprobabilty,lnprior)
-    
-    sampler.run_mcmc(pos, n_burn)
-    pos_b=sampler.chain[:,:,-1,:]
-    sampler.reset()
-
-    if verbosity>0:
-        print("Burn-in complete. Starting for real.")
-    if save_between_path is None:
-        save_between_path="ptmcmc_run_between_"+model
-
-    n_run_part=n_run
-    if save_between is not None:
-        n_run_part=min(n_run,save_between)
-        print("Choosing sub-chain-length:", n_run_part)
-        sampler.run_mcmc(pos_b,n_run_part)
-        while len(sampler.chain[0])<n_run:
-            np.savez_compressed(save_between_path, chain=sampler.chain, lnprob=sampler.lnprobability,
-                        labels=label_ar, mcmc_params={"n_dim":ndim,"n_walkers":nwalkers,"n_temp":n_temp, "Acc_fr":sampler.acceptance_fraction})
-            if verbosity>0:
-                print("Saved progress. Chain shape:", sampler.chain.shape)
-            sampler.run_mcmc(None,n_run_part)
-            if verbosity>0:
-                try:
-                    auto_time=sampler.get_autocorr_time(c=0.1)
-                    print("Min/Max AutoCorrTime:",np.min(auto_time), np.max(auto_time))
-                except AutocorrError as AcE:
-                    print(AcE.message)
-                except Exception as E:
-                    print(E.message)
-        np.savez_compressed(save_between_path, chain=sampler.chain, lnprob=sampler.lnprobability,
-                        labels=label_ar, mcmc_params={"n_dim":ndim,"n_walkers":nwalkers,"n_temp":n_temp, "Acc_fr":sampler.acceptance_fraction})
-    else:
-        sampler.run_mcmc(pos_b,n_run)
-
-    if verbosity>0:
-        print("Run done.")
-    if save:
-        np.savez_compressed("ptmcmc_run_"+model, chain=sampler.chain, lnprob=sampler.lnprobability,
              labels=label_ar, mcmc_params={"n_dim":ndim,"n_walkers":nwalkers, "Acc_fr":sampler.acceptance_fraction})
     return sampler
 
@@ -1294,8 +1201,6 @@ def run_ptmcmc_buildin_detrending(time,flux,sigma_flux,model,bounds,first_guess,
                 print("lnprob:",hf_lnprob.shape)
                 print("chain:", hf_chain.shape)
                 print("pos_b:", np.array(pos_b).shape)
-            else:
-                write_output(sampler.chain, sampler.lnprobability)
             ln_prob_len+=n_run_part
             if verbosity>0:
                 try:
