@@ -11,8 +11,8 @@ from emcee.autocorr import integrated_time
 from emcee.autocorr import AutocorrError
 
 
-from fitting import model_one_moon
-from fitting import model_no_moon
+from .fitting import model_one_moon
+from .fitting import model_no_moon
 
 R_sun_in_au = 0.00465
 R_earth_in_R_sun = 0.009157694
