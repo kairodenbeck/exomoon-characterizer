@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 import numpy as np
 
-import occultquad as oq
+from . import occultquad as oq
 
 def my_occultquad(z,u1,u2,p0):
     """
@@ -13,7 +13,8 @@ def my_occultquad(z,u1,u2,p0):
 R_sun_in_au = 0.00465
 R_earth_in_R_sun = 0.009157694
 
-def model_no_moon(time,ratio_P,a_o_R,impact_B,phase_B,period_B, c1,c2,verbosity=0,return_z=False, plots=False):
+def model_no_moon(time,ratio_P,a_o_R,impact_B,phase_B,period_B, c1,c2,verbosity=0,return_z=False, plots=False,kipping_LD=False):
+    
     const=a_o_R
     if verbosity>1:
         print(const)
@@ -28,8 +29,12 @@ def model_no_moon(time,ratio_P,a_o_R,impact_B,phase_B,period_B, c1,c2,verbosity=
     if return_z:
         return ([z_B_x,z_B_y])
 
-    u1 = c1#0.4089
-    u2 = c2#0.2556
+    if kipping_LD:
+        u1 = np.sqrt(c1)*c2
+        u2 = np.sqrt(c1)*(1-2.0*c2)
+    else:
+        u1 = c1#0.4089
+        u2 = c2#0.2556
 
     transit_signal_P=np.ones(len(z_B))
 
