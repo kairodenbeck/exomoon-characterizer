@@ -322,7 +322,7 @@ if use_mpi:
 #Generate output file name and delete old files with the same name
 #(hdf5 doesn't like trying to override old files)
 output_file_name="output_ml_"
-if sort_mode is not "none":
+if sort_mode != "none":
     output_file_name+="sortedby_"+sort_mode+"_"
 if moonness:
     output_file_name+="one_moon"
