@@ -39,6 +39,9 @@ else:
     sort_mode = sys.argv[3]
 
 def get_lightcurve_from_kic(kic_nr,quarter):
+    """Fetches the time, light curve and uncertainty of the star sepcified 
+    by the KIC number for the given quarter.
+    """
     kic_name="KIC "+"%09i"%kic_nr
     download_dir=os.path.abspath('./.lightkurve_cache')
     if not os.path.isdir(download_dir):
@@ -53,7 +56,9 @@ def get_lightcurve_from_kic(kic_nr,quarter):
         lc=lcf.PDCSAP_FLUX.normalize()
     except Exception as E:
         print("Trying to correct Error:", E)
-        cache_name=[download_dir+"/mastDownload/Kepler/"+o_id+"/"+pFn for o_id, pFn in zip(search_res.table["obs_id"],search_res.table["productFilename"])]
+        cache_name = [ download_dir + "/mastDownload/Kepler/" + o_id+"/"+pFn 
+        for o_id, pFn in zip(search_res.table["obs_id"],
+                             search_res.table["productFilename"])]
         os.system("rm -f %s"%(cache_name[selector]))
         lcf=search_res[selector].download(download_dir=download_dir)
         
@@ -61,7 +66,14 @@ def get_lightcurve_from_kic(kic_nr,quarter):
     return lc.to_pandas(["time","flux","flux_err"])
 
 def radius_mass_relation(mass, add_dispersion=False):
-    #https://arxiv.org/abs/1603.08614
+    """Calculates the right planet radius given a planet mass
+    using the scaling relation defined in 
+    https://arxiv.org/abs/1603.08614
+    Inputs:
+       - mass: mass of the planet
+       - add_dispersion: if True, scatters radius according to
+         the formula in the above reference 
+    """
     if mass<2.04:
         radius = 1.08*mass**0.279
         if add_dispersion:
@@ -78,12 +90,9 @@ def radius_mass_relation(mass, add_dispersion=False):
             frac_dev = np.random.randn()*0.0737
             radius*=1+frac_dev
     return radius
-    #if planet_mass<121.:
-    #    return planet_mass**(0.5)
-    #else:
-    #    return 11.
 
-def generate_light_curve(time,flux,star_radius=1.,star_mass=1.,moonness=True,verbosity=0,seed=None,return_param_dict=False):
+def generate_light_curve(time, flux, star_radius=1., star_mass=1., 
+        moonness=True, verbosity=0, seed=None, return_param_dict=False):
     #planet and moon orbit their common barycenter, which orbits the star
     #If no moon is present, the planet is at the barycenter
     if seed:
@@ -99,7 +108,9 @@ def generate_light_curve(time,flux,star_radius=1.,star_mass=1.,moonness=True,ver
 
     bary_period = 10.**(np.random.uniform(np.log10(50),np.log10(500)))
 
-    bary_t0 = np.random.uniform(np.min(time[np.isfinite(flux)]),min(np.max(time[np.isfinite(flux)]),np.min(time[np.isfinite(flux)])+bary_period))
+    bary_t0 = np.random.uniform(np.min(time[np.isfinite(flux)]), 
+                            min(np.max(time[np.isfinite(flux)]), 
+                            np.min(time[np.isfinite(flux)])+bary_period))
 
     bary_phase = (bary_t0/bary_period) % 1.
 
@@ -112,8 +123,9 @@ def generate_light_curve(time,flux,star_radius=1.,star_mass=1.,moonness=True,ver
     moon_mass = np.random.uniform(1.,20.)
     moon_radius = radius_mass_relation(moon_mass,add_dispersion=True)
 
-    #very approximate LD. Using https://arxiv.org/pdf/1503.07020.pdf for solar like values and dispersion
-    # and https://arxiv.org/pdf/1308.0009.pdf to constrain u1,u2 region (values outside might cause brightening).
+    #very approximate LD. Using https://arxiv.org/pdf/1503.07020.pdf for
+    #solar like values and dispersion and https://arxiv.org/pdf/1308.0009.pdf
+    #to constrain u1,u2 region (values outside might cause brightening).
     u1= np.random.normal(0.25,0.05)
     if u1<0:
         u1=0
@@ -199,8 +211,11 @@ def generate_light_curve(time,flux,star_radius=1.,star_mass=1.,moonness=True,ver
         print("a_o_R_s:", moon_sma)
         print("P_s:", moon_period)
 
-    model = model_one_moon(time,ratio_P,bary_a_o_R,bary_impact,bary_phase, bary_period,u1,u2,
-              ratio_S,a_o_R_S,moon_phase,moon_period,moon_mass/(planet_mass),i_S,Omega_S,fix_blocking=True)
+    model = model_one_moon(time, 
+            ratio_P, bary_a_o_R, bary_impact, bary_phase, bary_period, 
+            u1, u2, 
+            ratio_S, a_o_R_S, moon_phase,moon_period, moon_mass/(planet_mass), 
+            i_S, Omega_S, fix_blocking=True)
 
     flux_sim=model*flux
     
@@ -229,8 +244,10 @@ def fit_planet_parameters(time,flux,param_dict, plot_initial_guess=False):
 
     def model(time,ratio,a_o_R,impact,phase,period,q1,q2):
         if impact>1.0+ratio:#outside valid bounds
-            return np.ones(len(time))*100.*(impact)#make sure gradient points back to valid region
-        return model_no_moon(time,ratio, a_o_R, impact, phase, period, q1, q2, kipping_LD=True)
+            #make sure gradient points back to valid region
+            return np.ones(len(time))*100.*(impact)
+        return model_no_moon(time, ratio, a_o_R, impact, phase, period, 
+                                q1, q2, kipping_LD=True)
     if plot_initial_guess:
         model = model(time,*params)
         pl.figure()
@@ -239,7 +256,9 @@ def fit_planet_parameters(time,flux,param_dict, plot_initial_guess=False):
         pl.show()
 
     try:
-        res = curve_fit(model,time,flux,params,bounds=[[0,1.0,0.0,0.0,0.1,0.0,0.0],[0.2,1000,1.2,1.0,1000,1.,1.]])
+        res = curve_fit(model,time,flux,params, 
+                    bounds=[[0,1.0,0.0,0.0,0.1,0.0,0.0],
+                            [0.2,1000,1.2,1.0,1000,1.,1.]])
     except RuntimeError as E:
         print("Runtime error:", E)
         return [params]
