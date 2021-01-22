@@ -29,7 +29,6 @@ with open(temp_file_name, "w") as condor:
     condor.write("error         = ./logs/job.$(Cluster).$(Process).err\n")
     condor.write("log           = ./logs/job.$(Cluster).$(Process).log\n")
     if hostname=="seismo16":
-        print "setting requirements."
         condor.write("Requirements = (Machine == \"seismo18.mps.mpg.de\" || Machine == \"seismo19.mps.mpg.de\" || Machine == \"seismo20.mps.mpg.de\" || Machine == \"seismo23.mps.mpg.de\")\n")
     condor.write("Initialdir      = .\n")
     condor.write("image_size = %i\n"%(50000))
