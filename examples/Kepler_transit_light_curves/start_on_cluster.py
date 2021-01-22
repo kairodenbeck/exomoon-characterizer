@@ -35,8 +35,7 @@ with open(temp_file_name, "w") as condor:
     condor.write("queue\n")
 os.system("condor_submit %s" % temp_file_name)
 
-#os.system("rm -f %s" % temp_file_name)
 
-
+#Example how to set up running on only some nodes:
 #Requirements = (Machine == "seismo18.mps.mpg.de" || Machine == "seismo19.mps.mpg.de" || Machine == "seismo20.mps.mpg.de" || Machine == "seismo23.mps.mpg.de" || Machine == "seismo30.mps.mpg.de" )
 

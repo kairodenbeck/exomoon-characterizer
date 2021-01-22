@@ -1,3 +1,5 @@
+#Example how to read the files outputed by the generation script
+
 import numpy as np
 import h5py
 
@@ -18,11 +20,13 @@ if print_available_attributes:
     print(list(hf[list(hf.keys())[0]].attrs.keys()))
 
 for h in hf:
-    period = hf[h].attrs["P_b"]#<-- planet period
-    phase = hf[h].attrs["phi_b"]#<-- planet phase angle
+    hf_train = hf[h]["training parameters"]
+    hf_test = hf[h]["test parameters"]
+    period = hf_train.attrs["P_b"]#<-- planet period
+    phase = hf_train.attrs["phi_b"]#<-- planet phase angle
 
-    mass_star = hf[h].attrs["M_star"]
-    radius_star = hf[h].attrs["R_star"]
+    mass_star = hf_test.attrs["M_star"]
+    radius_star = hf_test.attrs["R_star"]
 
     parameters.append((period,phase,mass_star,radius_star))
 
