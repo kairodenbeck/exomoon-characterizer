@@ -1,0 +1,11 @@
+Executable      = start_on_cluster.sh
+Arguments	= False 10000 kepmag
+Universe        = vanilla
+machine_count = 1
+request_cpus = 24
+output        = ./logs/job.$(Cluster).$(Process).out
+error         = ./logs/job.$(Cluster).$(Process).err
+log           = ./logs/job.$(Cluster).$(Process).log
+Initialdir      = .
+image_size = 50000
+queue
