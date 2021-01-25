@@ -4,7 +4,6 @@ import os
 os.environ["HOME"]=os.path.expanduser("~")
 
 import numpy as np
-import pylab as pl
 
 import h5py
 import sys

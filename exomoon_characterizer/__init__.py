@@ -962,7 +962,6 @@ def run_ptmcmc_with_detrending(time,flux,sigma_flux,model,bounds,first_guess, nd
     if save_between_path is None:
         save_between_path="ptmcmc_run_between_"+model
 
-    import thread
     write_finished=True
 
     def write_output(new_chain,new_lnprob):

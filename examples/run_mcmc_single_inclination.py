@@ -1,10 +1,8 @@
 #!/usr/bin/python
 from __future__ import print_function, division
-import sys
-import os, os.path, errno
+import os
 import numpy as np
 import pylab as pl
-import h5py
 
 from exomoon_characterizer import run_ptmcmc_buildin_detrending
 from exomoon_characterizer.fitting import model_one_moon
