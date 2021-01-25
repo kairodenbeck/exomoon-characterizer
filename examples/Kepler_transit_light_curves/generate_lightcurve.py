@@ -11,7 +11,7 @@ import sys
 
 from exomoon_characterizer.fitting import model_one_moon, model_no_moon
 
-use_mpi=True  #still needs a good way to detect automatically when to use mpi
+use_mpi=False  #still needs a good way to detect automatically when to use mpi
 if use_mpi:
     from schwimmbad import MPIPool
 
@@ -53,8 +53,8 @@ def get_lightcurve_from_kic(kic_nr,quarter):
         lc=lcf.PDCSAP_FLUX.normalize()
     except Exception as E:
         print("Trying to correct Error:", E)
-        cache_name = [ download_dir + "/mastDownload/Kepler/" + o_id+"/"+pFn 
         for o_id, pFn in zip(search_res.table["obs_id"], search_res.table["productFilename"]):
+            cache_name = [ download_dir + "/mastDownload/Kepler/" + o_id+"/"+pFn ]
             os.system("rm -f %s"%(cache_name[selector]))
         lcf=search_res[selector].download(download_dir=download_dir)
         
