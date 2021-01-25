@@ -187,24 +187,25 @@ def log_likelihood_with_detrend(params, time, obs, sigma, b_l = None, b_u = None
         if LD_indices:
             if b_l:
                 b_l_single = np.concatenate((b_l[:5],
-                                            b_l[5 + 2 * LD_indices[i]:5 + 2 * LD_indices[i] + 2],
-                                            b_l[5 + 2 * np.max(LD_indices) + 2:]))
-            else: b_l_single = None
+                                             b_l[5 + 2 * LD_indices[i]:5 + 2 * LD_indices[i] + 2],
+                                             b_l[5 + 2 * np.max(LD_indices) + 2:]))
+            else:
+                b_l_single = None
             if b_u:
                 b_u_single = np.concatenate((b_u[:5],
-                                                b_u[5 + 2 * LD_indices[i]:5 + 2 * LD_indices[i] + 2],
-                                                b_u[5 + 2 * np.max(LD_indices) + 2:]))
+                                             b_u[5 + 2 * LD_indices[i]:5 + 2 * LD_indices[i] + 2],
+                                             b_u[5 + 2 * np.max(LD_indices) + 2:]))
             else:
                 b_u_single = None
             if moonness == "one_moon":
                 params_only_transit = np.concatenate((params[:5],
-                                                params[5 + 2 * LD_indices[i]:5 + 2 * LD_indices[i] + 2],
-                                                params[5 + 2 * np.max(LD_indices) + 2:]))
+                                                      params[5 + 2 * LD_indices[i]:5 + 2 * LD_indices[i] + 2],
+                                                      params[5 + 2 * np.max(LD_indices) + 2:]))
 
             else:
                 params_only_transit = np.concatenate((params[:5],
-                                                params[5 + 2 * LD_indices[i]:5 + 2 * LD_indices[i] + 2],
-                                                params[5 + 2 * np.max(LD_indices) + 2:]))
+                                                      params[5 + 2 * LD_indices[i]:5 + 2 * LD_indices[i] + 2],
+                                                      params[5 + 2 * np.max(LD_indices) + 2:]))
         else:
             params_only_transit = np.copy(params)
         

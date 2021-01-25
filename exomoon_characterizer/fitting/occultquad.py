@@ -103,7 +103,7 @@ def appellf1(a,b1,b2,c,z1,z2,**kwargs):
     #   hypergeo. function
     # 2013-03-11 13:34 IJMC: Added a small error-trap for 'nan' hypgf values
 
-    if kwargs.has_key('eps'):
+    if 'eps' in kwargs:
         eps = kwargs['eps']
     else:
         eps = 1e-9
