@@ -35,6 +35,7 @@ if len(sys.argv)<4:
 else:
     sort_mode = sys.argv[3]
 
+
 def get_lightcurve_from_kic(kic_nr,quarter):
     """Fetches the time, light curve and uncertainty of the star sepcified 
     by the KIC number for the given quarter.
@@ -60,6 +61,7 @@ def get_lightcurve_from_kic(kic_nr,quarter):
         
         lc=lcf.PDCSAP_FLUX.normalize()
     return lc.to_pandas(["time","flux","flux_err"])
+
 
 def radius_mass_relation(mass, add_dispersion=False):
     """Calculates the right planet radius given a planet mass
@@ -89,6 +91,7 @@ def radius_mass_relation(mass, add_dispersion=False):
             frac_dev = np.random.randn()*0.0737
             radius*=1+frac_dev
     return radius
+
 
 def generate_light_curve(time, flux, star_radius=1., star_mass=1., moonness=True, verbosity=0, seed=None, return_param_dict=False):
     """Add a transit light curve with or without moon to an existing
@@ -137,7 +140,7 @@ def generate_light_curve(time, flux, star_radius=1., star_mass=1., moonness=True
         u2=1-u1
     elif u2<-u1/2.:
         u2=-u1/2.
-    
+
     if moonness:
 
         ratio_S = moon_radius/109.1/star_radius 
@@ -224,7 +227,7 @@ def generate_light_curve(time, flux, star_radius=1., star_mass=1., moonness=True
     if return_param_dict:
         return flux_sim, params_out
     return flux_sim
-    
+
 
 def fit_planet_parameters(time,flux,param_dict, plot_initial_guess=False):
     from scipy.optimize import curve_fit
@@ -267,7 +270,7 @@ def fit_planet_parameters(time,flux,param_dict, plot_initial_guess=False):
         raise E
     return res
 
-    
+
 def build_lightcurve(kic_nr, radius, mass, moonness, return_param_dict=True):
     fluxes=[]
     for quarter in range(0,17):
@@ -276,16 +279,17 @@ def build_lightcurve(kic_nr, radius, mass, moonness, return_param_dict=True):
             fluxes.extend(np.array(data["flux"]))
         else:
             fluxes.extend(np.ones(quarter_data_points[quarter])*np.nan)
-    
+
     time = np.array(global_times)
     flux = np.array(fluxes)
-    
+
     flux_before=np.copy(flux)
     flux, po = generate_light_curve(time, flux, star_radius = radius, star_mass = mass, moonness = moonness, return_param_dict = True, verbosity = 0)
-    
+
     if return_param_dict:
         return time, flux, po
     return time, flux
+
 
 def callback_build_lightcurve(data):
     kic_nr, radius, mass, kepmag = data
@@ -293,6 +297,7 @@ def callback_build_lightcurve(data):
         return build_lightcurve(kic_nr, radius, mass, moonness, return_param_dict = True)
     except:
         return None, None, None
+
 
 def get_number_of_data_points_per_quarter(kic_nr_ref = 2163351):
        
@@ -304,7 +309,8 @@ def get_number_of_data_points_per_quarter(kic_nr_ref = 2163351):
             global_times.extend(np.array(data["time"]))
             quarter_data_points.append(len(data["time"]))
     return global_times, quarter_data_points
-    
+
+
 def generate_output_file_name(moonness,sort_mode):
     output_file_name="output_ml_"
     if sort_mode != "none":
@@ -315,6 +321,7 @@ def generate_output_file_name(moonness,sort_mode):
         output_file_name+="no_moon"
     output_file_name+=".h5"
     return output_file_name
+
 
 ### Open list of kics without planets.        
 with open("kics_without_planets.json","r") as k: 
@@ -341,7 +348,7 @@ global_times, quarter_data_points = get_number_of_data_points_per_quarter()
 #Set use_mpi to True when starting with mpiexec (e.g. on a compute cluster)       
 if use_mpi:
     pool = MPIPool()
-    
+
     if not pool.is_master():
         pool.wait()
         sys.exit(0)
