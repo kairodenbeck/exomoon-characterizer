@@ -5,14 +5,14 @@ import json
 
 
 def get_available_kics(quarter):
-    # api-endpoint 
+    # api-endpoint
     URL = "https://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI"
 
-    # defining a params dict for the parameters to be sent to the API 
-    PARAMS = {"table": "keplertimeseries", \
-              "quarter": str(quarter), \
-              "format": "json", \
-              "where": "object_status=0 and targettype='long cadence'", \
+    # defining a params dict for the parameters to be sent to the API
+    PARAMS = {"table": "keplertimeseries",
+              "quarter": str(quarter),
+              "format": "json",
+              "where": "object_status=0 and targettype='long cadence'",
               "select": "star_id, targettype, radius, surface_gravity, kepmag, eff_temp"}
     # sending get request and saving the response as response object
     r = requests.get(url=URL, params=PARAMS)
@@ -29,11 +29,11 @@ def get_available_kics(quarter):
     return data
 
 
-kics={}
-for used_quarter in range(0,17):
-    kics_per_quarter=get_available_kics(used_quarter)
-    
-    kics_quarter_dict={kic["star_id"]: kic for kic in kics_per_quarter}
+kics = {}
+for used_quarter in range(0, 17):
+    kics_per_quarter = get_available_kics(used_quarter)
+
+    kics_quarter_dict = {kic["star_id"]: kic for kic in kics_per_quarter}
     print("Start merging quarter", used_quarter)
     kics.update(kics_quarter_dict)
     print("End merging quarter", used_quarter)
