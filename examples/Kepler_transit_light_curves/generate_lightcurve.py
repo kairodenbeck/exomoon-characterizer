@@ -305,13 +305,12 @@ def get_number_of_data_points_per_quarter(kic_nr_ref = 2163351):
        
     #We know that KIC 2163351 has data in all quarters
     quarter_data_points=[]
-
     global_times=[]
     for quarter in range(0,17):
             data = get_lightcurve_from_kic(kic_nr_ref,quarter)
             global_times.extend(np.array(data["time"]))
             quarter_data_points.append(len(data["time"]))
-    return quarter_data_points
+    return global_times, quarter_data_points
     
 def generate_output_file_name(moonness,sort_mode):
     output_file_name="output_ml_"
@@ -344,7 +343,7 @@ else:
 #We need to find the number of data points in each quarter
 #bc lightkurve doesn't provide quarters with no data at all
 #so we need to fill them with NaNs later manually
-quarter_data_points = get_number_of_data_points_per_quarter()
+global_times, quarter_data_points = get_number_of_data_points_per_quarter()
 
 #Set use_mpi to True when starting with mpiexec (e.g. on a compute cluster)       
 if use_mpi:
