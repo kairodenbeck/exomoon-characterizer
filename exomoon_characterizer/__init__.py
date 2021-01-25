@@ -26,14 +26,14 @@ def test_h5_file(output_file_name, n_run=None):
         import os
         os.system("h5clear -s " + output_file_name)
         with h5py.File(output_file_name, "r") as hf:
-            
+
             test_prob = hf["lnprob"]
             test_chain = hf["chain"]
 
             restart_name = output_file_name
             print("restarting from", restart_name)
             print("shape:", test_chain.shape)
-            if n_run and len(test_chain[0,0]) == n_run:
+            if n_run and len(test_chain[0, 0]) == n_run:
                 print("Trying to restart from an finished run. Set n_run higher if you wish to continue. Exiting.")
                 exit()
     except Exception as E:
@@ -42,9 +42,9 @@ def test_h5_file(output_file_name, n_run=None):
 
         sys.stderr.write(E.message + "\n")
         for a in E.args:
-           sys.stderr.write(str(a) + "\n")
+            sys.stderr.write(str(a) + "\n")
 
-        restart_name=None
+        restart_name = None
     return restart_name
 
 
@@ -53,26 +53,26 @@ def test_npz_file(output_file_name, n_run=None):
     if not os.path.isfile(output_file_name + ".npz"):
         return None
     try:
-        test_data=np.load(output_file_name + ".npz")
-        test_prob=test_data["lnprob"]
-        test_chain=test_data["chain"]
-        restart_name=output_file_name+".npz"
+        test_data = np.load(output_file_name + ".npz")
+        test_prob = test_data["lnprob"]
+        test_chain = test_data["chain"]
+        restart_name = output_file_name + ".npz"
         print("restarting from", restart_name)
         print("shape:", test_chain.shape)
-        if n_run and len(test_chain[0])==n_run:
+        if n_run and len(test_chain[0]) == n_run:
             print("Trying to restart from an finished run. Set n_run higher if you wish to continue. Exiting.")
             exit()
         del test_prob
         del test_chain
         del test_data
     except Exception as E:
-       sys.stderr.write("Can't open restart file. Starting from scratch.")
+        sys.stderr.write("Can't open restart file. Starting from scratch.")
 
-       sys.stderr.write(E.message + "\n")
-       for a in E.args:
-           sys.stderr.write(str(a) + "\n")
+        sys.stderr.write(E.message + "\n")
+        for a in E.args:
+            sys.stderr.write(str(a) + "\n")
 
-       restart_name=None
+        restart_name=None
     return restart_name
 
 
@@ -92,57 +92,56 @@ def open_MCMC_results(file_name, n_burn, flat = True):
     temp = False
     if ".h5" in file_name:
         import h5py
-        hf = h5py.File(file_name,"r",swmr=True)
+        hf = h5py.File(file_name, "r", swmr = True)
         chain = hf["chain"][:]
         lnprob = hf["lnprob"][:]
-        dims_chain=chain.shape
+        dims_chain = chain.shape
         n_dim = dims_chain[-1]
         n_run = dims_chain[-2]
-        n_walker=dims_chain[-3]
+        n_walker = dims_chain[-3]
         if len(dims_chain)==4:
-            temp=True
-            n_temp=dims_chain[0]
+            temp = True
+            n_temp = dims_chain[0]
 
-    assert(n_run>n_burn)
+    assert(n_run > n_burn)
 
     if temp:
-        chain = chain[:,:,n_burn:,]
-        lnprob = lnprob[:,:,n_burn:]
+        chain = chain[:, :, n_burn:, :]
+        lnprob = lnprob[:, :, n_burn:]
 
         if flat:
-            chain = chain.reshape(n_temp,(n_run-n_burn)*n_walker,n_dim)
-            lnprob = lnprob.reshape(n_temp,(n_run-n_burn)*n_walker)
+            chain = chain.reshape(n_temp, (n_run - n_burn) * n_walker, n_dim)
+            lnprob = lnprob.reshape(n_temp, (n_run - n_burn) * n_walker)
 
     else:
-        chain = chain[:,n_burn:,]
-        lnprob = lnprob[:,n_burn:]
+        chain = chain[:, n_burn:, :]
+        lnprob = lnprob[:, n_burn:]
 
         if flat:
-            chain = chain.reshape(-1,n_dim)
+            chain = chain.reshape(-1, n_dim)
             lnprob = lnprob.reshape(-1)
 
     return chain, lnprob
 
 
-def split_param_vector_in_dict(param, n_obs=1, n_limb_dark=1, flat_system=False, detrending_type="none", detrening_build_in=False, moon_exists=False):
+def split_param_vector_in_dict(param, n_obs = 1, n_limb_dark = 1, flat_system = False, detrending_type = "none", detrening_build_in = False, moon_exists = False):
 
-    n_detr_per_transit=0
+    n_detr_per_transit = 0
     if detrending_type == "Offset":
-        n_detr_per_transit=1
+        n_detr_per_transit = 1
     if detrending_type == "Linear":
-        n_detr_per_transit=2
+        n_detr_per_transit = 2
     if detrending_type == "Poly2":
-        n_detr_per_transit=3
+        n_detr_per_transit = 3
     if detrending_type == "Poly3":
-        n_detr_per_transit=4
+        n_detr_per_transit = 4
     if detrending_type == "Poly4":
-        n_detr_per_transit=5
+        n_detr_per_transit = 5
     if detrending_type == "Poly5":
-        n_detr_per_transit=6
+        n_detr_per_transit = 6
 
 
-
-def log_likelihood_with_detrend(params, time, obs, sigma, b_l=None, b_u=None, detrend_order=2, minus_inf=-np.inf, mode="both", moonness="no_moon", use_inclination=False, LD_indices=None, use_kipping_LD_param=True, verbosity=0, plots=False, split_moon_period=False, fix_blocking=False, density_prior=False, stellar_density=None, oversample_factor=1, return_model=False, exposure_time=None):
+def log_likelihood_with_detrend(params, time, obs, sigma, b_l = None, b_u = None, detrend_order = 2, minus_inf = -np.inf, mode = "both", moonness = "no_moon", use_inclination = False, LD_indices = None, use_kipping_LD_param = True, verbosity = 0, plots = False, split_moon_period = False, fix_blocking = False, density_prior = False, stellar_density = None, oversample_factor = 1, return_model = False, exposure_time = None):
     """Detends light curve and finds best fitting transit model. Returns log(likelihood) or related output
     
     arguments:
@@ -157,58 +156,57 @@ def log_likelihood_with_detrend(params, time, obs, sigma, b_l=None, b_u=None, de
     minus_inf -- float or numpy special number (e.g. -numpy.inf). Minus infinity is returned for out of bunds etc. Some application might like negative large numbers (e.g. -1e6) better.
     mode -- "both", "likeihood", or "prior"
     """
-    single_loglike=log_likelihood_no_moon
-    if moonness=="one_moon":
-        single_loglike=log_likelihood_one_moon
-    n_detr=len(obs)*(detrend_order+1)
+    single_loglike = log_likelihood_no_moon
+    if moonness == "one_moon":
+        single_loglike = log_likelihood_one_moon
+    n_detr=len(obs) * (detrend_order+1)
 
-    detrend_params=np.array(params[-n_detr:]).reshape(len(obs),detrend_order+1)
+    detrend_params = np.array(params[-n_detr:]).reshape(len(obs), detrend_order+1)
 
     if verbosity>2:
-        print("Boundary lengths:", len(b_l),len(b_u))
+        print("Boundary lengths:", len(b_l), len(b_u))
 
     result=0
     if return_model:
         model_lc=[]
-    for t,o,s,f,d,i in zip(time,obs,sigma,oversample_factor,detrend_params,range(len(time))):
-        detrend_model=np.polyval(d,t-t[len(t)/2])+1.
-        if np.any(detrend_model<=0.9) or np.any(detrend_model>=1.1):
-            if verbosity>1:
+    for t, o, s, f, d, i in zip(time, obs, sigma, oversample_factor, detrend_params, range(len(time))):
+        detrend_model = np.polyval(d, t - t[len(t) / 2]) + 1.
+        if np.any(detrend_model <= 0.9) or np.any(detrend_model >= 1.1):
+            if verbosity > 1:
                 print("Out of bounds detrending:", d)
             return minus_inf
-        detrended_obs=o/detrend_model
-        detrended_sig=s/detrend_model
+        detrended_obs = o / detrend_model
+        detrended_sig = s / detrend_model
 
-        result-=np.sum(d**2.0)
+        result -= np.sum(d**2.0)
 
-        params_only_transit=params[:-n_detr]
+        params_only_transit = params[:-n_detr]
 
-        if verbosity>2:
+        if verbosity > 2:
             print("LD index:", LD_indices[i])
         if LD_indices:
-            #params_only_transit[9],params_only_transit[10]=params_only_transit[10],params_only_transit[9]
             if b_l:
-                b_l_single=np.concatenate((b_l[:5],
-                                            b_l[5+2*LD_indices[i]:5+2*LD_indices[i]+2],
-                                            b_l[5+2*np.max(LD_indices)+2:]))
-            else: b_l_single=None
+                b_l_single = np.concatenate((b_l[:5],
+                                            b_l[5 + 2 * LD_indices[i]:5 + 2 * LD_indices[i] + 2],
+                                            b_l[5 + 2 * np.max(LD_indices) + 2:]))
+            else: b_l_single = None
             if b_u:
-                b_u_single=np.concatenate((b_u[:5],
-                                                b_u[5+2*LD_indices[i]:5+2*LD_indices[i]+2],
-                                                b_u[5+2*np.max(LD_indices)+2:]))
+                b_u_single = np.concatenate((b_u[:5],
+                                                b_u[5 + 2 * LD_indices[i]:5 + 2 * LD_indices[i] + 2],
+                                                b_u[5 + 2 * np.max(LD_indices) + 2:]))
             else:
-                b_u_single=None
-            if moonness=="one_moon":
-                params_only_transit=np.concatenate((params[:5],
-                                                params[5+2*LD_indices[i]:5+2*LD_indices[i]+2],
-                                                params[5+2*np.max(LD_indices)+2:]))
+                b_u_single = None
+            if moonness == "one_moon":
+                params_only_transit = np.concatenate((params[:5],
+                                                params[5 + 2 * LD_indices[i]:5 + 2 * LD_indices[i] + 2],
+                                                params[5 + 2 * np.max(LD_indices) + 2:]))
 
             else:
-                params_only_transit=np.concatenate((params[:5],
-                                                params[5+2*LD_indices[i]:5+2*LD_indices[i]+2],
-                                                params[5+2*np.max(LD_indices)+2:]))
+                params_only_transit = np.concatenate((params[:5],
+                                                params[5 + 2 * LD_indices[i]:5 + 2 * LD_indices[i] + 2],
+                                                params[5 + 2 * np.max(LD_indices) + 2:]))
         else:
-            params_only_transit=np.copy(params)
+            params_only_transit = np.copy(params)
         
         try:
             loglike=single_loglike(params_only_transit,t,detrended_obs,detrended_sig,b_l_single,b_u_single,
