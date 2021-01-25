@@ -7,9 +7,7 @@ import os.path
 from time import sleep
 import h5py
 import emcee
-from emcee.autocorr import integrated_time
-from emcee.autocorr import AutocorrError
-
+from emcee.autocorr import integrated_time, AutocorrError
 
 from .fitting import model_one_moon
 from .fitting import model_no_moon
@@ -76,8 +74,7 @@ def test_npz_file(output_file_name, n_run=None):
     return restart_name
 
 def open_MCMC_results(file_name,n_burn,flat=True):
-    """
-    Returns chain and lnprob saved in file_name.
+    """Returns chain and lnprob saved in file_name.
 
     arguments:
     file_name -- name of file to be opened
@@ -141,7 +138,21 @@ def split_param_vector_in_dict(param,n_obs=1,n_limb_dark=1,flat_system=False,det
 
 
 
-def log_likelihood_with_detrend(params,time,obs,sigma,b_l=None,b_u=None,detrend_order=2, minus_inf=-np.inf, mode="both",moonness="no_moon",use_inclination=False,LD_indices=None,use_kipping_LD_param=True, interpolate_occultquad=None,verbosity=0,plots=False,split_moon_period=False, fix_blocking=False, density_prior=False,stellar_density=None,oversample_factor=1,return_model=False,exposure_time=None):
+def log_likelihood_with_detrend(params, time, obs, sigma, b_l=None, b_u=None, detrend_order=2, minus_inf=-np.inf, mode="both", moonness="no_moon", use_inclination=False, LD_indices=None, use_kipping_LD_param=True, verbosity=0, plots=False, split_moon_period=False, fix_blocking=False, density_prior=False, stellar_density=None, oversample_factor=1, return_model=False, exposure_time=None):
+    """Detends light curve and finds best fitting transit model. Returns log(likelihood) or related output
+    
+    arguments:
+    params -- transit model parameters
+    time -- times at which obs were taken
+    obs -- relative brightness at times time
+    sigma -- uncertainty of obs
+    
+    Keyword arguments:
+    b_l, b_u -- array-like, lower and upper bunds for params
+    detrend_order -- int, order of polynomial used for detrending
+    minus_inf -- float or numpy special number (e.g. -numpy.inf). Minus infinity is returned for out of bunds etc. Some application might like negative large numbers (e.g. -1e6) better.
+    mode -- "both", "likeihood", or "prior"
+    """
     single_loglike=log_likelihood_no_moon
     if moonness=="one_moon":
         single_loglike=log_likelihood_one_moon
@@ -198,15 +209,13 @@ def log_likelihood_with_detrend(params,time,obs,sigma,b_l=None,b_u=None,detrend_
         try:
             loglike=single_loglike(params_only_transit,t,detrended_obs,detrended_sig,b_l_single,b_u_single,
                 minus_inf=minus_inf,mode=mode,use_kipping_LD_param=use_kipping_LD_param,
-                interpolate_occultquad=interpolate_occultquad,verbosity=verbosity,
-                fix_blocking=fix_blocking,
+                verbosity=verbosity, fix_blocking=fix_blocking,
                 density_prior=density_prior,stellar_density=stellar_density,
                 oversample_factor=f,exposure_time=exposure_time,use_inclination=use_inclination)
             if return_model:
                 m=single_loglike(params_only_transit,t,detrended_obs,detrended_sig,b_l_single,b_u_single,
                 minus_inf=minus_inf,mode="model light curve",use_kipping_LD_param=use_kipping_LD_param,
-                interpolate_occultquad=interpolate_occultquad,verbosity=verbosity,
-                fix_blocking=fix_blocking,
+                verbosity=verbosity, fix_blocking=fix_blocking,
                 density_prior=density_prior,stellar_density=stellar_density,
                 oversample_factor=f,exposure_time=exposure_time,use_inclination=use_inclination)
                 model_lc.append(m)
@@ -266,7 +275,23 @@ def polydetrend(time,flux,sigma,polyorder=2,return_parameters=False):
         return p
     return flux/m, sigma/m, p, m
 
-def log_likelihood_buildin_detrend(params,time,obs,sigma,b_l=None,b_u=None,evaluation_times=None,detrend_order=2, minus_inf=-np.inf, mode="both",moonness="no_moon",LD_indices=None,use_inclination=False,use_kipping_LD_param=True, interpolate_occultquad=None,split_period=False,verbosity=0,plots=False, fix_blocking=False, density_prior=False,stellar_density=None,oversample_factor=1,exposure_time=None):
+def log_likelihood_buildin_detrend(params, time, obs, sigma, b_l=None, b_u=None, evaluation_times=None, detrend_order=2, minus_inf=-np.inf, mode="both", moonness="no_moon", LD_indices=None, use_inclination=False, use_kipping_LD_param=True, split_period=False, verbosity=0, plots=False, fix_blocking=False, density_prior=False, stellar_density=None, oversample_factor=1, exposure_time=None):
+    """Dinds best fitting transit model + detrending. Returns log(likelihood) or related output
+    
+    arguments:
+    params -- transit model parameters
+    time -- times at which obs were taken
+    obs -- relative brightness at times time
+    sigma -- uncertainty of obs
+    
+    Keyword arguments:
+    b_l, b_u -- array-like, lower and upper bunds for params
+    detrend_order -- int, order of polynomial used for detrending
+    minus_inf -- float or numpy special number (e.g. -numpy.inf). Minus infinity is returned for out of bunds etc. Some application might like negative large numbers (e.g. -1e6) better.
+    mode -- "both", "probability", "prior", "detrend parameters", "model light curve", "projected distance"
+    moonness -- "one_moon" or "no_moon". Whether to include a moon in the transit model or not
+    LD_indices -- Limb-Darkening indices. When combining transit from different telescopes, indicate which LD to use for which transit (e.g. [0,0,0,1,1,0,2,2] for three different telescopes and 8 transits)
+    """
     single_model=model_no_moon
     single_loglike=log_likelihood_no_moon
     if moonness=="one_moon":
@@ -288,7 +313,6 @@ def log_likelihood_buildin_detrend(params,time,obs,sigma,b_l=None,b_u=None,evalu
         z_M=[]
     for t,et,o,s,f,i in zip(time,evaluation_times,obs,sigma,oversample_factor,range(len(time))):
         if LD_indices:
-            #params_only_transit[9],params_only_transit[10]=params_only_transit[10],params_only_transit[9]
             if b_l:
                 b_l_single=np.concatenate((b_l[:5],
                                             b_l[5+2*LD_indices[i]:5+2*LD_indices[i]+2],
@@ -312,10 +336,9 @@ def log_likelihood_buildin_detrend(params,time,obs,sigma,b_l=None,b_u=None,evalu
             params_only_transit=np.copy(params)
 
         if "prior"==mode or "both"==mode:
-            #try:
             result+=single_loglike(params_only_transit,t,o,s,b_l_single,b_u_single,
                     minus_inf=minus_inf,mode=mode,use_kipping_LD_param=use_kipping_LD_param,
-                    interpolate_occultquad=interpolate_occultquad,verbosity=verbosity,split_period=split_period,fix_blocking=fix_blocking,
+                    verbosity=verbosity,split_period=split_period,fix_blocking=fix_blocking,
                     density_prior=density_prior,stellar_density=stellar_density,
                     oversample_factor=f,exposure_time=exposure_time)
             
@@ -337,11 +360,11 @@ def log_likelihood_buildin_detrend(params,time,obs,sigma,b_l=None,b_u=None,evalu
                 u1=2.0*np.sqrt(q1)*q2
                 u2=np.sqrt(q1)*(1.0-2.0*q2)
                 params_only_transit[5],params_only_transit[6]=u1,u2
-            m=single_model(t,*list(params_only_transit),interpolate_occultquad=None)
+            m=single_model(t,*list(params_only_transit))
 
             if "projected distance"==mode:
                 print("Calculating projected distance")
-                z_P_tr,z_M_tr=single_model(t,*list(params_only_transit),interpolate_occultquad=None,return_z=True)
+                z_P_tr,z_M_tr=single_model(t,*list(params_only_transit),return_z=True)
                 z_P.append(z_P_tr)
                 z_M.append(z_M_tr)
 
@@ -356,7 +379,7 @@ def log_likelihood_buildin_detrend(params,time,obs,sigma,b_l=None,b_u=None,evalu
 
             detrend_params.append(poly)
             if "model light curve" == mode:
-                em=single_model(et,*list(params_only_transit),interpolate_occultquad=None)
+                em=single_model(et,*list(params_only_transit))
                 if detrend_order>=0:
                     detrend_curve=np.polyval(poly,et)
                 else:
@@ -381,7 +404,7 @@ def log_likelihood_buildin_detrend(params,time,obs,sigma,b_l=None,b_u=None,evalu
         print("prob:", result)
     return result
 
-def log_likelihood_one_moon(params,time,obs,sigma,b_l,b_u, minus_inf=-np.inf, mode="both",use_kipping_LD_param=True, interpolate_occultquad=None,verbosity=0,plots=False,split_period=False, fix_blocking=False, density_prior=False,stellar_density=None,oversample_factor=1,exposure_time=None,use_inclination=False):
+def log_likelihood_one_moon(params,time,obs,sigma,b_l,b_u, minus_inf=-np.inf, mode="both",use_kipping_LD_param=True, verbosity=0,plots=False,split_period=False, fix_blocking=False, density_prior=False,stellar_density=None,oversample_factor=1,exposure_time=None,use_inclination=False):
     #verbosity=2
 
     if verbosity>2:
@@ -523,11 +546,11 @@ def log_likelihood_one_moon(params,time,obs,sigma,b_l,b_u, minus_inf=-np.inf, mo
         if use_inclination:
             model_lc = model_one_moon(time,ratio_P,a_o_R,impact,phase_bary,per_B, u1,u2,
             ratio_M, a_o_R_PM, phase_moon, per_PM, mass_ratio_MP, i_s, Omega_s,
-            plots=plots,verbosity=verbosity,interpolate_occultquad=interpolate_occultquad,return_z=False,fix_blocking=fix_blocking)
+            plots=plots,verbosity=verbosity,return_z=False,fix_blocking=fix_blocking)
         else:
             model_lc = model_one_moon(time,ratio_P,a_o_R,impact,phase_bary,per_B, u1,u2,
             ratio_M, a_o_R_PM, phase_moon, per_PM, mass_ratio_MP,
-            plots=plots,verbosity=verbosity,interpolate_occultquad=interpolate_occultquad,return_z=False,fix_blocking=fix_blocking)
+            plots=plots,verbosity=verbosity,return_z=False,fix_blocking=fix_blocking)
 
         if np.any(model_lc>1.0+1.0e-5):
             if verbosity>2:
@@ -548,7 +571,7 @@ def log_likelihood_one_moon(params,time,obs,sigma,b_l,b_u, minus_inf=-np.inf, mo
 
 
 
-def log_likelihood_no_moon(params,time,obs,sigma,b_l,b_u, minus_inf=-np.inf, mode="both",use_kipping_LD_param=True, interpolate_occultquad=None,verbosity=0,plots=False,split_moon_period=False, fix_blocking=False,use_inclination=False, density_prior=False,stellar_density=None,split_period=False,oversample_factor=1,exposure_time=None):
+def log_likelihood_no_moon(params,time,obs,sigma,b_l,b_u, minus_inf=-np.inf, mode="both",use_kipping_LD_param=True, verbosity=0,plots=False,split_moon_period=False, fix_blocking=False,use_inclination=False, density_prior=False,stellar_density=None,split_period=False,oversample_factor=1,exposure_time=None):
     if oversample_factor==1:
         time=np.copy(time)
         obs_time=np.copy(time)
@@ -608,7 +631,7 @@ def log_likelihood_no_moon(params,time,obs,sigma,b_l,b_u, minus_inf=-np.inf, mod
             u2=np.sqrt(q1)*(1.0-2.0*q2)
 
         model_lc = model_no_moon(time,ratio_P,a_o_R,impact,phase_bary,per_B, u1,u2,
-            plots=plots,verbosity=verbosity,interpolate_occultquad=interpolate_occultquad,return_z=False)
+            plots=plots,verbosity=verbosity,return_z=False)
 
 
         
@@ -631,7 +654,7 @@ def log_likelihood_no_signal(time,obs,sigma, minus_inf=-np.inf,verbosity=0):
 
 
 
-def run_mcmc_2(time,flux,sigma_flux,model,bounds,first_guess,ndim,nwalkers,n_run,n_burn, save=False,verbosity=0,save_between=None,save_between_path=None, use_kipping_LD_param=True,interpolate_occultquad=None,split_moon_period=False, allow_oversampling=True,fix_blocking=False,use_own_method=True, density_prior=False,stellar_density=None, emcee_a=2., use_mpi=False,restart_from=None):
+def run_mcmc_2(time,flux,sigma_flux,model,bounds,first_guess,ndim,nwalkers,n_run,n_burn, save=False,verbosity=0,save_between=None,save_between_path=None, use_kipping_LD_param=True,split_moon_period=False, allow_oversampling=True,fix_blocking=False,use_own_method=True, density_prior=False,stellar_density=None, emcee_a=2., use_mpi=False,restart_from=None):
 	
 	
     oversampling_factor=1
@@ -641,7 +664,7 @@ def run_mcmc_2(time,flux,sigma_flux,model,bounds,first_guess,ndim,nwalkers,n_run
 
 
     #select model
-    lnprobkwargs={"use_kipping_LD_param":use_kipping_LD_param, "interpolate_occultquad":interpolate_occultquad, "verbosity":verbosity, "fix_blocking":fix_blocking, "stellar_density":stellar_density}
+    lnprobkwargs={"use_kipping_LD_param":use_kipping_LD_param, "verbosity":verbosity, "fix_blocking":fix_blocking, "stellar_density":stellar_density}
     if model=="one_moon" and density_prior:
         lnprobkwargs["density_prior"]=density_prior
     if model=="no_moon":
@@ -771,7 +794,7 @@ def run_mcmc_2(time,flux,sigma_flux,model,bounds,first_guess,ndim,nwalkers,n_run
              labels=label_ar, mcmc_params={"n_dim":ndim,"n_walkers":nwalkers, "Acc_fr":sampler.acceptance_fraction})
     return sampler
 
-def run_ptmcmc_with_detrending(time,flux,sigma_flux,model,bounds,first_guess, ndim,nwalkers,n_run,n_burn,n_temp,use_inclination=False, LD_indices=None,save=False,verbosity=0,save_between=None, restart_from=None,save_between_path=None, use_kipping_LD_param=True,interpolate_occultquad=None, allow_oversampling=True,fix_blocking=False,use_own_method=True, density_prior=False, emcee_a=2.,detrend_order=2,use_mpi=False):
+def run_ptmcmc_with_detrending(time,flux,sigma_flux,model,bounds,first_guess, ndim,nwalkers,n_run,n_burn,n_temp,use_inclination=False, LD_indices=None,save=False,verbosity=0,save_between=None, restart_from=None,save_between_path=None, use_kipping_LD_param=True, allow_oversampling=True,fix_blocking=False,use_own_method=True, density_prior=False, emcee_a=2.,detrend_order=2,use_mpi=False):
 
     oversampling_factor=[]
     for t in time:
@@ -784,7 +807,6 @@ def run_ptmcmc_with_detrending(time,flux,sigma_flux,model,bounds,first_guess, nd
     #select model
     lnprob=log_likelihood_with_detrend
     lnprobkwargs={  "use_kipping_LD_param":use_kipping_LD_param,
-                    "interpolate_occultquad":interpolate_occultquad,
                     "verbosity":verbosity,
                     "detrend_order":detrend_order,
                     "fix_blocking":fix_blocking,
@@ -1009,7 +1031,7 @@ def run_ptmcmc_with_detrending(time,flux,sigma_flux,model,bounds,first_guess, nd
         print("Run done.")
     return sampler
 
-def run_ptmcmc_buildin_detrending(time,flux,sigma_flux,model,bounds,first_guess,ndim,nwalkers,n_run,n_burn,n_temp,save=False,verbosity=0,LD_indices=None,save_between=None,save_between_path=None,save_skip=100,use_kipping_LD_param=True,split_period=False,use_inclination=False, restart_from=None,interpolate_occultquad=None,beta=1.0/np.sqrt(2.0),allow_oversampling=True,fix_blocking=False, use_own_method=True, density_prior=False, emcee_a=2.,detrend_order=2,use_mpi=False):
+def run_ptmcmc_buildin_detrending(time,flux,sigma_flux,model,bounds,first_guess,ndim,nwalkers,n_run,n_burn,n_temp,save=False,verbosity=0,LD_indices=None,save_between=None,save_between_path=None,save_skip=100,use_kipping_LD_param=True,split_period=False,use_inclination=False, restart_from=None,beta=1.0/np.sqrt(2.0),allow_oversampling=True,fix_blocking=False, use_own_method=True, density_prior=False, emcee_a=2.,detrend_order=2,use_mpi=False):
 
     oversampling_factor=[]
     for t in time:
@@ -1022,7 +1044,6 @@ def run_ptmcmc_buildin_detrending(time,flux,sigma_flux,model,bounds,first_guess,
     #select model
     lnprob=log_likelihood_buildin_detrend
     lnprobkwargs={  "use_kipping_LD_param":use_kipping_LD_param,
-                    "interpolate_occultquad":interpolate_occultquad,
                     "verbosity":verbosity,
                     "detrend_order":detrend_order,
                     "fix_blocking":fix_blocking,
