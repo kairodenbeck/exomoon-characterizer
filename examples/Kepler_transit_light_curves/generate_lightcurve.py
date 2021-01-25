@@ -1,8 +1,6 @@
 from __future__ import print_function, division
 import os
 
-os.environ["HOME"]=os.path.expanduser("~")
-
 import numpy as np
 import pylab as pl
 import lightkurve as lk
@@ -69,10 +67,13 @@ def radius_mass_relation(mass, add_dispersion=False):
     """Calculates the right planet radius given a planet mass
     using the scaling relation defined in 
     https://arxiv.org/abs/1603.08614
-    Inputs:
+    Arguments:
        - mass: mass of the planet
+    Keyword arguments:
        - add_dispersion: if True, scatters radius according to
-         the formula in the above reference 
+         the formula in the above reference
+    Output:
+       - radius of the star 
     """
     if mass<2.04:
         radius = 1.08*mass**0.279
@@ -93,6 +94,9 @@ def radius_mass_relation(mass, add_dispersion=False):
 
 def generate_light_curve(time, flux, star_radius=1., star_mass=1., 
         moonness=True, verbosity=0, seed=None, return_param_dict=False):
+    """Add a transit light curve with or without moon to an existing
+    light curve (mostly with noise).
+    """ 
     #planet and moon orbit their common barycenter, which orbits the star
     #If no moon is present, the planet is at the barycenter
     if seed:
@@ -264,7 +268,6 @@ def fit_planet_parameters(time,flux,param_dict, plot_initial_guess=False):
         return [params]
     except Exception as E:
         raise E
-
     return res
 
     
@@ -298,13 +301,35 @@ def callback_build_lightcurve(data):
     except:
         return None, None, None
 
-        
+def get_number_of_data_points_per_quarter(kic_nr_ref = 2163351):
+       
+    #We know that KIC 2163351 has data in all quarters
+    quarter_data_points=[]
+
+    global_times=[]
+    for quarter in range(0,17):
+            data = get_lightcurve_from_kic(kic_nr_ref,quarter)
+            global_times.extend(np.array(data["time"]))
+            quarter_data_points.append(len(data["time"]))
+    return quarter_data_points
+    
+def generate_output_file_name(moonness,sort_mode):
+    output_file_name="output_ml_"
+    if sort_mode != "none":
+        output_file_name+="sortedby_"+sort_mode+"_"
+    if moonness:
+        output_file_name+="one_moon"
+    else:
+        output_file_name+="no_moon"
+    output_file_name+=".h5"
+    return output_file_name
+
+### Open list of kics without planets.        
 with open("kics_without_planets.json","r") as k: 
     kics = json.load(k)
-
 available_kic_nrs = [kics[kic]["star_id"] for kic in kics if kics[kic]["radius"] and 0.84<kics[kic]["radius"]<1.15]
-
 print("Number of G-type stars:", len(available_kic_nrs))
+
 
 if "none" == sort_mode:
     print("no sorting of kics")
@@ -315,20 +340,11 @@ elif "kepmag" == sort_mode:
     available_kic_nrs = list(np.array(available_kic_nrs)[sort_index])
 else:
     raise NotImplementedError
-    
 
 #We need to find the number of data points in each quarter
 #bc lightkurve doesn't provide quarters with no data at all
 #so we need to fill them with NaNs later manually
-quarter_data_points=[]#[473, 1626, 4075, 4140, 4116, 4492, 4276, 4229, 3113, 4618, 4447, 4480, 3551, 4252, 4344, 4446, 3540]
-
-global_times=[]
-for quarter in range(0,17):
-        data = get_lightcurve_from_kic(2163351,quarter)#We know that KIC 2163351 has data in all quarters
-        global_times.extend(np.array(data["time"]))
-        quarter_data_points.append(len(data["time"]))
-
-
+quarter_data_points = get_number_of_data_points_per_quarter()
 
 #Set use_mpi to True when starting with mpiexec (e.g. on a compute cluster)       
 if use_mpi:
@@ -340,18 +356,9 @@ if use_mpi:
 
 #Generate output file name and delete old files with the same name
 #(hdf5 doesn't like trying to override old files)
-output_file_name="output_ml_"
-if sort_mode != "none":
-    output_file_name+="sortedby_"+sort_mode+"_"
-if moonness:
-    output_file_name+="one_moon"
-else:
-    output_file_name+="no_moon"
-output_file_name+=".h5"
-
+output_file_name=generate_output_file_name(moonness,sort_mode)
 if os.path.exists(output_file_name):
     os.remove(output_file_name)
-
 outf=h5py.File(output_file_name,"w", libver='latest')
 
 i_succ=0
