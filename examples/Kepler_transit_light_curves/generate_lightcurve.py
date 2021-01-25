@@ -4,7 +4,6 @@ import os
 import numpy as np
 import pylab as pl
 import lightkurve as lk
-import requests
 
 import h5py
 import json
@@ -12,7 +11,7 @@ import sys
 
 from exomoon_characterizer.fitting import model_one_moon, model_no_moon
 
-use_mpi=True #still needs a good way to detect automatically when to use mpi
+use_mpi=True  #still needs a good way to detect automatically when to use mpi
 if use_mpi:
     from schwimmbad import MPIPool
 
@@ -55,9 +54,8 @@ def get_lightcurve_from_kic(kic_nr,quarter):
     except Exception as E:
         print("Trying to correct Error:", E)
         cache_name = [ download_dir + "/mastDownload/Kepler/" + o_id+"/"+pFn 
-        for o_id, pFn in zip(search_res.table["obs_id"],
-                             search_res.table["productFilename"])]
-        os.system("rm -f %s"%(cache_name[selector]))
+        for o_id, pFn in zip(search_res.table["obs_id"], search_res.table["productFilename"]):
+            os.system("rm -f %s"%(cache_name[selector]))
         lcf=search_res[selector].download(download_dir=download_dir)
         
         lc=lcf.PDCSAP_FLUX.normalize()
@@ -92,8 +90,7 @@ def radius_mass_relation(mass, add_dispersion=False):
             radius*=1+frac_dev
     return radius
 
-def generate_light_curve(time, flux, star_radius=1., star_mass=1., 
-        moonness=True, verbosity=0, seed=None, return_param_dict=False):
+def generate_light_curve(time, flux, star_radius=1., star_mass=1., moonness=True, verbosity=0, seed=None, return_param_dict=False):
     """Add a transit light curve with or without moon to an existing
     light curve (mostly with noise).
     """ 
@@ -272,32 +269,28 @@ def fit_planet_parameters(time,flux,param_dict, plot_initial_guess=False):
 
     
 def build_lightcurve(kic_nr, radius, mass, moonness, return_param_dict=True):
-    times=[]
     fluxes=[]
     for quarter in range(0,17):
         data = get_lightcurve_from_kic(kic_nr,quarter)
         if data is not None:
-            #print(data["time"].shape)
             fluxes.extend(np.array(data["flux"]))
         else:
-            #print("No data for quarter", quarter)
             fluxes.extend(np.ones(quarter_data_points[quarter])*np.nan)
     
-    time = np.array(global_times)#.flatten()
-    
-    flux = np.array(fluxes)#.flatten()
+    time = np.array(global_times)
+    flux = np.array(fluxes)
     
     flux_before=np.copy(flux)
-    flux,po=generate_light_curve(time,flux,star_radius=radius,star_mass=mass,moonness=moonness,return_param_dict=True,verbosity=0)
+    flux, po = generate_light_curve(time, flux, star_radius = radius, star_mass = mass, moonness = moonness, return_param_dict = True, verbosity = 0)
     
     if return_param_dict:
-        return time,flux, po
-    return time,flux
+        return time, flux, po
+    return time, flux
 
 def callback_build_lightcurve(data):
     kic_nr, radius, mass, kepmag = data
     try:
-        return build_lightcurve(kic_nr, radius, mass, moonness, return_param_dict=True)
+        return build_lightcurve(kic_nr, radius, mass, moonness, return_param_dict = True)
     except:
         return None, None, None
 
