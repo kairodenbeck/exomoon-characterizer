@@ -7,7 +7,7 @@ import os.path
 from time import sleep
 import h5py
 import emcee
-from emcee.autocorr import integrated_time, AutocorrError
+from emcee.autocorr import AutocorrError
 
 from .fitting import model_one_moon
 from .fitting import model_no_moon
@@ -16,23 +16,24 @@ R_sun_in_au = 0.00465
 R_earth_in_R_sun = 0.009157694
 R_earth_in_au = 23455.0
 
-def test_h5_file(output_file_name,n_run=None):
+
+def test_h5_file(output_file_name, n_run=None):
     assert(".h5" in output_file_name)
     import os.path
     if not os.path.isfile(output_file_name):
         return None
     try:
         import os
-        os.system("h5clear -s "+output_file_name)
-        with h5py.File(output_file_name,"r") as hf:
+        os.system("h5clear -s " + output_file_name)
+        with h5py.File(output_file_name, "r") as hf:
             
-            test_prob=hf["lnprob"]
-            test_chain=hf["chain"]
+            test_prob = hf["lnprob"]
+            test_chain = hf["chain"]
 
-            restart_name=output_file_name
+            restart_name = output_file_name
             print("restarting from", restart_name)
             print("shape:", test_chain.shape)
-            if n_run and len(test_chain[0,0])==n_run:
+            if n_run and len(test_chain[0,0]) == n_run:
                 print("Trying to restart from an finished run. Set n_run higher if you wish to continue. Exiting.")
                 exit()
     except Exception as E:
@@ -46,12 +47,13 @@ def test_h5_file(output_file_name,n_run=None):
         restart_name=None
     return restart_name
 
+
 def test_npz_file(output_file_name, n_run=None):
     import os.path
-    if not os.path.isfile(output_file_name+".npz"):
+    if not os.path.isfile(output_file_name + ".npz"):
         return None
     try:
-        test_data=np.load(output_file_name+".npz")
+        test_data=np.load(output_file_name + ".npz")
         test_prob=test_data["lnprob"]
         test_chain=test_data["chain"]
         restart_name=output_file_name+".npz"
@@ -73,7 +75,8 @@ def test_npz_file(output_file_name, n_run=None):
        restart_name=None
     return restart_name
 
-def open_MCMC_results(file_name,n_burn,flat=True):
+
+def open_MCMC_results(file_name, n_burn, flat = True):
     """Returns chain and lnprob saved in file_name.
 
     arguments:
@@ -86,7 +89,7 @@ def open_MCMC_results(file_name,n_burn,flat=True):
     Non-flattened output has the shape (n_walker,n_run-n_burn,n_dim). Flattend output has the shape (n_walker*(n_run-n_burn),b_dim)
     """
 
-    temp=False
+    temp = False
     if ".h5" in file_name:
         import h5py
         hf = h5py.File(file_name,"r",swmr=True)
@@ -120,7 +123,8 @@ def open_MCMC_results(file_name,n_burn,flat=True):
 
     return chain, lnprob
 
-def split_param_vector_in_dict(param,n_obs=1,n_limb_dark=1,flat_system=False,detrending_type="none",detrening_build_in=False,moon_exists=False):
+
+def split_param_vector_in_dict(param, n_obs=1, n_limb_dark=1, flat_system=False, detrending_type="none", detrening_build_in=False, moon_exists=False):
 
     n_detr_per_transit=0
     if detrending_type == "Offset":
@@ -274,6 +278,7 @@ def polydetrend(time,flux,sigma,polyorder=2,return_parameters=False):
     if return_parameters:
         return p
     return flux/m, sigma/m, p, m
+
 
 def log_likelihood_buildin_detrend(params, time, obs, sigma, b_l=None, b_u=None, evaluation_times=None, detrend_order=2, minus_inf=-np.inf, mode="both", moonness="no_moon", LD_indices=None, use_inclination=False, use_kipping_LD_param=True, split_period=False, verbosity=0, plots=False, fix_blocking=False, density_prior=False, stellar_density=None, oversample_factor=1, exposure_time=None):
     """Dinds best fitting transit model + detrending. Returns log(likelihood) or related output
@@ -936,24 +941,20 @@ def run_ptmcmc_with_detrending(time,flux,sigma_flux,model,bounds,first_guess, nd
     print("Start burn-in.")
 
     if use_mpi:
-        sampler = emcee.PTSampler(n_temp,nwalkers,ndim,
-                                    lnprob,lnprob,
-                                    loglargs=lnprobargs,loglkwargs=lnprobkwargs,
-                                    logpargs=lnpriorargs,logpkwargs=lnpriorkwargs,
-                                    pool=pool)
-        #sampler = emcee.PTSampler(n_temp,nwalkers,ndim,lnprobabiltiy,lnprior, pool=pool)
+        sampler = emcee.PTSampler(n_temp, nwalkers, ndim,
+                                    lnprob, lnprob,
+                                    loglargs = lnprobargs, loglkwargs = lnprobkwargs,
+                                    logpargs = lnpriorargs, logpkwargs = lnpriorkwargs,
+                                    pool = pool)
     else:
-        sampler = emcee.PTSampler(n_temp,nwalkers,ndim,
-                                    lnprob,lnprob,
-                                    loglargs=lnprobargs,loglkwargs=lnprobkwargs,
-                                    logpargs=lnpriorargs,logpkwargs=lnpriorkwargs,
-                                    threads=1)
-        #sampler = emcee.PTSampler(n_temp,nwalkers,ndim,lnprobabiltiy,lnprior,betas=betas,threads=1)
+        sampler = emcee.PTSampler(n_temp, nwalkers, ndim,
+                                    lnprob, lnprob,
+                                    loglargs = lnprobargs, loglkwargs = lnprobkwargs,
+                                    logpargs = lnpriorargs, logpkwargs = lnpriorkwargs,
+                                    threads = 1)
     
     sampler.run_mcmc(pos, n_burn)
     pos_b=sampler.chain[:,:,-1,:]
-    print(pos_b)
-    print(sampler.lnprobability)
     sampler.reset()
 
 
@@ -1019,8 +1020,6 @@ def run_ptmcmc_with_detrending(time,flux,sigma_flux,model,bounds,first_guess, nd
                 except Exception as E:
                     print(E.message)
             sampler.reset()
-        #np.savez_compressed(save_between_path, chain=sampler.chain, lnprob=sampler.lnprobability,
-        #                labels=label_ar, mcmc_params={"n_dim":ndim,"n_walkers":nwalkers,"n_temp":n_temp, "Acc_fr":sampler.acceptance_fraction})
     else:
         sampler.run_mcmc(pos_b,n_run)
         if save:
@@ -1031,7 +1030,7 @@ def run_ptmcmc_with_detrending(time,flux,sigma_flux,model,bounds,first_guess, nd
         print("Run done.")
     return sampler
 
-def run_ptmcmc_buildin_detrending(time,flux,sigma_flux,model,bounds,first_guess,ndim,nwalkers,n_run,n_burn,n_temp,save=False,verbosity=0,LD_indices=None,save_between=None,save_between_path=None,save_skip=100,use_kipping_LD_param=True,split_period=False,use_inclination=False, restart_from=None,beta=1.0/np.sqrt(2.0),allow_oversampling=True,fix_blocking=False, use_own_method=True, density_prior=False, emcee_a=2.,detrend_order=2,use_mpi=False):
+def run_ptmcmc_buildin_detrending(time, flux, sigma_flux, model, bounds, first_guess, ndim, nwalkers, n_run, n_burn, n_temp, save=False, verbosity=0, LD_indices=None, save_between=None, save_between_path=None, save_skip=100, use_kipping_LD_param=True, split_period=False, use_inclination=False, restart_from=None, beta=1.0/np.sqrt(2.0), allow_oversampling=True, fix_blocking=False, use_own_method=True, density_prior=False, emcee_a=2., detrend_order=2, use_mpi=False):
 
     oversampling_factor=[]
     for t in time:
@@ -1069,9 +1068,9 @@ def run_ptmcmc_buildin_detrending(time,flux,sigma_flux,model,bounds,first_guess,
     lnprobkwargs["mode"]="probability"
     detrendparamskwargs["mode"]="detrend parameters"
 
-    lnprobargs=(time,flux,sigma_flux,bounds[0],bounds[1])
-    lnpriorargs=(time,flux,sigma_flux,bounds[0],bounds[1])
-    detrendparamsargs=(time,flux,sigma_flux,bounds[0],bounds[1])
+    lnprobargs = (time,flux,sigma_flux,bounds[0],bounds[1])
+    lnpriorargs = (time,flux,sigma_flux,bounds[0],bounds[1])
+    detrendparamsargs = (time,flux,sigma_flux,bounds[0],bounds[1])
 
     print("Use mpi?", use_mpi)
     import sys
@@ -1241,17 +1240,19 @@ def run_ptmcmc_buildin_detrending(time,flux,sigma_flux,model,bounds,first_guess,
         #np.savez_compressed(save_between_path, chain=sampler.chain, lnprob=sampler.lnprobability,
         #                labels=label_ar, mcmc_params={"n_dim":ndim,"n_walkers":nwalkers,"n_temp":n_temp, "Acc_fr":sampler.acceptance_fraction})
     else:
-        sampler.run_mcmc(pos_b,n_run)
+        sampler.run_mcmc(pos_b, n_run)
         if save:
-            np.savez_compressed("ptmcmc_run_"+model, chain=sampler.chain, lnprob=sampler.lnprobability,
-                 labels=label_ar, mcmc_params={"n_dim":ndim,"n_walkers":nwalkers, "detrend order":detrend_order})
+            np.savez_compressed("ptmcmc_run_" + model, chain = sampler.chain, lnprob = sampler.lnprobability,
+                 labels = label_ar, mcmc_params={"n_dim":ndim,"n_walkers":nwalkers, "detrend order":detrend_order})
 
     if verbosity>0:
         print("Run done.")
     return sampler
-    
-def calculate_M(sma,per):#sma in au, per in days. output: Mass in earth mass
+
+
+def calculate_M(sma, per):#sma in au, per in days. output: Mass in earth mass
     return sma**3.0/(per/365.25)**2.0/3.0e-6
 
-def calculate_P(sma,mass):#Mass in earth mass, sma in au. output in days
+
+def calculate_P(sma, mass):#Mass in earth mass, sma in au. output in days
     return 365.25*np.sqrt((sma)**3.0*4*np.pi**2.0/(4*np.pi**2.0*(mass)*3e-6))
